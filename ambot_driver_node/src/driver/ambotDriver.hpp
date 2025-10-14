@@ -20,6 +20,8 @@
 #include <pthread.h>
 #include <type_traits>
 #include <sys/time.h>
+#include <iomanip>
+// #include "protocolStruct.hpp"
 // #include "privateProtocol.hpp"
 
 // #include <ambot_msg/JointState.h>
@@ -70,9 +72,9 @@ namespace ambot_driver_ns{
         // PrivateProtocolCLASS *protocol;         //communication protocol instance
         const RobotDriver_TP robotParams;       //the const input robot params
 
-         int motorFd, sensorFd;                  //low driver motor file ID and sensor ID
-         pthread_t motorTid, sensorTid;          //motor read feedback thread ID and sensor read thread ID
-        
+        int motorFd, sensorFd;                  //low driver motor file ID and sensor ID
+        pthread_t motorTid, sensorTid;          //motor read feedback thread ID and sensor read thread ID
+        size_t processBuffer(const uint8_t* data, size_t length) ;
         // std::vector<int> motorIDExist;          //current exist motor ID     
         // int motorNumExist;                      //current exist motor num
 

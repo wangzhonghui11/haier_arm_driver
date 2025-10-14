@@ -48,10 +48,10 @@ bool Robot::init(void)
 {
     //1 init driver
     robotDriver = new ambot_driver_ns::AmbotDriverCLASS(ros->robotFeatures);
-    // if(robotDriver->initial())
-    //     return true;
-    // else
-    //     return false;
+    if(robotDriver->initial())
+        return true;
+    else
+        return false;
 }
 
 /**  

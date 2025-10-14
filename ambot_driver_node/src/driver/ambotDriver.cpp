@@ -95,85 +95,6 @@ namespace ambot_driver_ns{
         }
         else
             std::cout << "Port " << robotParams.motorDevName.c_str() << " open successfully!" << std::endl;
-        
-
-
-        // 4. set sensor serial feature
-        // sensorFd = open(robotParams.sensorDevName.c_str(), O_RDWR | O_NOCTTY );
-        // if (sensorFd == -1) {
-        //     perror("Error opening sensor serial port");
-        //     std::cout << COUT_RED << "IMU Device Can't Find!!!" << COUT_RESET << std::endl;
-        //     if (robotParams.robotType == robotType.at(ambot_W1))
-        //         exit(0);
-        // }else{
-        //     printf("imu find!!!\n");
-        //     tcgetattr(sensorFd, &SerialPortSettings);
-        //     // printf("sensor baudrate:%d\n", robotParams.sensorDevBaud);
-        //     if (robotParams.sensorDevBaud == 115200)
-        //     {
-        //         std::cout << COUT_BLUE << "sensor set baud:" << 115200 << COUT_RESET << std::endl;
-        //         cfsetispeed(&SerialPortSettings, B115200);
-        //         cfsetospeed(&SerialPortSettings, B115200);
-        //     }else if (robotParams.sensorDevBaud == 921600)
-        //     {
-        //         std::cout << COUT_BLUE << "sensor set baud:" << 921600 << COUT_RESET << std::endl;
-        //         cfsetispeed(&SerialPortSettings, B921600);
-        //         cfsetospeed(&SerialPortSettings, B921600);
-        //     }else if (robotParams.sensorDevBaud == 1000000)
-        //     {
-        //         std::cout << COUT_BLUE << "sensor set baud:" << 1000000 << COUT_RESET << std::endl;
-        //         cfsetispeed(&SerialPortSettings, B1000000);
-        //         cfsetospeed(&SerialPortSettings, B1000000);
-        //     }else if (robotParams.sensorDevBaud == 1500000)
-        //     {
-        //         std::cout << COUT_BLUE << "sensor set baud:" << 1500000 << COUT_RESET << std::endl;
-        //         cfsetispeed(&SerialPortSettings, B1500000);
-        //         cfsetospeed(&SerialPortSettings, B1500000);
-        //     }else if (robotParams.sensorDevBaud == 2000000)
-        //     {
-        //         std::cout << COUT_BLUE << "sensor set baud:" << 2000000 << COUT_RESET << std::endl;
-        //         cfsetispeed(&SerialPortSettings, B2000000);
-        //         cfsetospeed(&SerialPortSettings, B2000000);
-        //     }else if (robotParams.sensorDevBaud == 2500000)
-        //     {
-        //         std::cout << COUT_BLUE << "sensor set baud:" << 2500000 << COUT_RESET << std::endl;
-        //         cfsetispeed(&SerialPortSettings, B2500000);
-        //         cfsetospeed(&SerialPortSettings, B2500000);
-        //     }
-        //     SerialPortSettings.c_cflag &= ~PARENB;      // Disable parity
-        //     SerialPortSettings.c_cflag &= ~CSTOPB;      // 1 stop bit
-        //     SerialPortSettings.c_cflag |= CS8;          // 8 bits per byte
-        //     SerialPortSettings.c_cflag &= ~CRTSCTS;     // Disable RTS/CTS hardware flow control
-        //     SerialPortSettings.c_cflag |= CREAD | CLOCAL; // Turn on READ & ignore ctrl lines (CLOCAL = SerialPortSettings
-        //     SerialPortSettings.c_lflag &= ~ICANON;      // Disable canonical mode
-        //     SerialPortSettings.c_lflag &= ~ECHO;        // Disable echo
-        //     SerialPortSettings.c_lflag &= ~ECHOE;       // Disable erasure
-        //     SerialPortSettings.c_lflag &= ~ECHONL;      // Disable new-line echo
-        //     SerialPortSettings.c_lflag &= ~ISIG;        // Disable interpretation of INTR, QUIT and SUSP
-        //     SerialPortSettings.c_iflag &= ~(IXON | IXOFF | IXANY); // Turn off s/w flow ctrl
-        //     SerialPortSettings.c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL); // Disable any special handling of received bytes
-        //     SerialPortSettings.c_oflag &= ~OPOST;       // Prevent special interpretation of output bytes (e.g. newline chars)
-        //     SerialPortSettings.c_oflag &= ~ONLCR;       // Prevent conversion of newline to carriage return/line feed
-        //     SerialPortSettings.c_cc[VTIME] = 0;         // timeout set, unit 1/10s, if set zero, will return right now 
-        //     SerialPortSettings.c_cc[VMIN] = 0;          // wait for enough data to read, if set zero, data will read right now
-        //     ioctl(sensorFd, TIOCGSERIAL, &ser_info);
-        //     ser_info.flags |= ASYNC_LOW_LATENCY;
-        //     ioctl(sensorFd, TIOCSSERIAL, &ser_info);
-        //     if((tcsetattr(sensorFd, TCSANOW, &SerialPortSettings)) != 0) 
-        //     {
-        //         std::cout << "ERROR in setting sensor serial port attributes! for port " << robotParams.sensorDevName << std::endl;
-        //         sleep(1);
-        //     }
-        //     else
-        //         std::cout << "Port " << robotParams.sensorDevName << " open successfully!" << std::endl;
-        // }
-        // motorCommandSum.command.resize(robotParams.motorNum);
-        // motorFB.resize(robotParams.motorNum);
-        // wheelVel.resize(robotParams.wheelMotorNum);
-        // rosData.motor_num = robotParams.motorNum;
-        // rosData.motorState.resize(robotParams.motorNum);
-
-        // motorNumExist = 0;
     }
     
     AmbotDriverCLASS::~AmbotDriverCLASS()
@@ -525,6 +446,7 @@ namespace ambot_driver_ns{
     // *   @return     true:get successful   false:get failed
     //     */
      #define TEMP_READ_BUFFER_LENGTH 256*8
+     #define LEN_MAX 36
     void AmbotDriverCLASS::getAllMotorStateFromMCU(void)
     {   
         // 1. init all local variables
@@ -533,24 +455,9 @@ namespace ambot_driver_ns{
         int16_t frameHeadIndex, currentTail;
         uint8_t tempReadBuffer[TEMP_READ_BUFFER_LENGTH];
         uint8_t motorFeedbackBuffer[TEMP_READ_BUFFER_LENGTH];
-
+        uint8_t read_buffer[36];
         // 2. set init value to variables
         frameHeadIndex = currentTail = 0;
-        const uint8_t oneMotorDataLength = 9;
-        const int16_t frameDataLength = motorNumExist * oneMotorDataLength + CRC_DATA_SIZE + 4;
-
-        #ifdef SHOW_READ_FEEDBACK_PERIOD
-        struct timeval timeOldMotor,timeNewMotor;
-        gettimeofday(&timeOldMotor, NULL);
-        timeNewMotor = timeOldMotor;
-        #endif
-
-        if (robotParams.robotType == robotType.at(ambot_N1))
-            inFlag = 0;
-        else if (robotParams.robotType == robotType.at(ambot_W1))
-            inFlag = 1;
-        else if (robotParams.robotType == robotType.at(ambot_P1))
-            inFlag = 2;
 
         // 3.wait for receive enough data to analysis
         while (1)
@@ -561,54 +468,24 @@ namespace ambot_driver_ns{
                 printf("receive data thread exit!!\n");
                 pthread_exit(NULL);
             }
-            usleep(WAIT_RESPONSE_US_DELAY);
-            // 5.keep current receive buffer won't break, keep circle read buffer normal
-            if (currentTail + 3 * frameDataLength >= TEMP_READ_BUFFER_LENGTH)
-            {
-                // be careful tail index can't more than head index,if it happen, reset all index
-                if(currentTail < frameHeadIndex)
-                {
-                    frameHeadIndex = 0;
-                    currentTail = 0;
-                }
-                else{
-                    memcpy(tempReadBuffer, &tempReadBuffer[frameHeadIndex], currentTail - frameHeadIndex);
-                    currentTail -= frameHeadIndex;
-                    frameHeadIndex = 0;
-                    memset(&tempReadBuffer[currentTail], 0, TEMP_READ_BUFFER_LENGTH - currentTail);
-                }
-            }
-            
+            usleep(10000);
             // 6.read data and analysis
-            currentReadCount = read(motorFd, &tempReadBuffer[currentTail], TEMP_READ_BUFFER_LENGTH - currentTail);
-            currentTail += currentReadCount;
-            for (int i = frameHeadIndex; i < currentTail; i++)
-            {
-                if (protocol->checkMotorFBFrame(inFlag, &tempReadBuffer[i]))
-                {
-                    frameHeadIndex = i;
-                    break;
-                }
-                frameHeadIndex = i;
-            }
-            // for (int i = 0; i < currentTail - frameHeadIndex; i++)
-            // {   
-            //     printf("%x\t", tempReadBuffer[frameHeadIndex + i]);
-            // }
-            // printf("\ncount:%d   h:%d    t:%d\n", currentReadCount, frameHeadIndex, currentTail);
-            // std::cout  << "\n%d\n" << std::endl;
-            if (currentTail - frameHeadIndex >= frameDataLength)
-            {
-                memcpy(motorFeedbackBuffer, &tempReadBuffer[frameHeadIndex + protocol->ControlIndex.FUNCTION_CODE], frameDataLength - 1);           //-1:dont need the frame head
-                if (protocol->motorFBParas(motorFeedbackBuffer, currentTail - frameHeadIndex, motorFB)) 
-                {
-            
-                    // motorRawState2RosPublish(motorFB, rosData);
-                }
-                frameHeadIndex += frameDataLength;
-                // do not copy the frame head
-
-            }
+            /** ssize_t read(int fd, void *buf, size_t count);
+            ​​参数​​:
+            fd: 文件描述符（在您代码中是 motorFd）
+            buf: 存储读取数据的缓冲区指针（&tempReadBuffer[currentTail]）
+            count: 要读取的最大字节数（TEMP_READ_BUFFER_LENGTH - currentTail）
+            ​​返回值​​:
+            成功时返回实际读取的字节数（currentReadCount）
+            返回0表示到达文件末尾（对串口通常意味着连接断开）
+            返回-1表示出错，错误代码在 errno中
+            */
+            currentReadCount = read(motorFd, read_buffer, LEN_MAX);
+            std::cout << "Read " << currentReadCount << " bytes:\n";
+            for (ssize_t i = 0; i < currentReadCount; ++i) {
+                std::cout << std::hex << std::setw(2) << std::setfill('0') 
+                        << static_cast<int>(read_buffer[i]) << " ";
+}
         }
     }
 
