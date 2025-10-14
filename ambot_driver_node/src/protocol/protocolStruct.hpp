@@ -14,14 +14,6 @@
 namespace ambot_driver_ns
 {
     /*these macro for global use*/
-    #define WAIT_RESPONSE_US_DELAY  20              //us
-    #define U_SECOND_COUNT          1000000         //us
-    #define DELAY_TIMEOUT           3000000         //us
-    #define CRC_DATA_SIZE           2           
-    #define WRITE_BUFFER_SIZE       400         
-    #define READ_BUFFER_SIZE        400         
-    #define FRAME_HEAD_DATA         0xAA    
-    #define MY_PI                   3.1415926f    
 
     #define COUT_RESET   "\033[0m"
     #define COUT_BLACK   "\033[30m"      /* Black */
@@ -44,46 +36,49 @@ namespace ambot_driver_ns
     #define ambot_N1  0
     #define ambot_W1  1
     #define ambot_P1  2
+    #define FRAME_HEAD_H  0xF0
+    #define FRAME_HEAD_L  0xF0
 
-    constexpr uint8_t FRAME_HEAD_H = 0xF0;
-    constexpr uint8_t FRAME_HEAD_L = 0xF0;
+    // Navigation send mesg frame to MCU --------
+    #define ID_CMD_TIME_SET        0x01
+    #define ID_CMD_MOP_SET         0x02
+    #define ID_CMD_JAW_SET         0x03
+    #define ID_CMD_CATCHER_SET     0x04
+    #define ID_CMD_MAGNET_SET      0x05
+    #define ID_CMD_MECARM_SET      0x06
+    #define ID_CMD_LIFTS_SET       0x07
+    #define ID_CMD_LED_SET         0x08
+    #define ID_CMD_HEARTBEAT       0x09
+    /*---------------------------------------------*/
+    #define  STORE_NUM_TIME_SET       0
+    #define  STORE_NUM_MOP_SET        1
+    #define  STORE_NUM_JAW_SET        2
+    #define  STORE_NUM_CATCHER_SET    3
+    #define  STORE_NUM_MAGNET_SET     4
+    #define  STORE_NUM_MECARM_SET     5
+    #define  STORE_NUM_LIFTS_SET      6
+    #define  STROE_NUM_LED_SET        7
+    /*---------------------------------------------*/
+    #define DATA_LEGTH_TIME_SET        8
+    #define DATA_LEGTH_MOP_SET         3
+    #define DATA_LEGTH_JAW_SET         4
+    #define DATA_LEGTH_CATCHER_SET     4
+    #define DATA_LEGTH_MAGNET_SET      2   // 
+    #define DATA_LEGTH_MECARM_SET      1
+    #define DATA_LEGTH_LIFTS_SET       1
+    #define DATA_LEGTH_LED_SET         2
+    #define DATA_LEGTH_HEARTBEAT       0
+
+    // MCU send mesg frame to Navigation --------
+    #define ID_MEC_ARM_UPLOAD        0x11
+    #define ID_LIFTS_UPLOAD          0x12
+    #define ID_JAW_MOTOR_UPLOAD      0x13
+
+
+    #define DATA_LEGTH_MEC_ARM       4
+    #define DATA_LEGTH_LIFTS         4
+    #define DATA_LEGTH_JAW_MOTOR     6
     /*this enum indicate all function code  according to our private protocol*/
-
-        // 存储编号
-        enum class StoreNum : uint8_t {
-            TIME_SET    = 0,
-            MOP_SET     = 1,
-            JAW_SET     = 2,
-            CATCHER_SET = 3,
-            MAGNET_SET  = 4,
-            MECARM_SET  = 5,
-            LIFTS_SET   = 6,
-            LED_SET     = 7
-        };
-
-        // 数据长度定义
-        constexpr uint8_t DATA_LENGTH_TIME_SET    = 8;
-        constexpr uint8_t DATA_LENGTH_MOP_SET     = 3;
-        constexpr uint8_t DATA_LENGTH_JAW_SET     = 4;
-        constexpr uint8_t DATA_LENGTH_CATCHER_SET = 4;
-        constexpr uint8_t DATA_LENGTH_MAGNET_SET  = 2;
-        constexpr uint8_t DATA_LENGTH_MECARM_SET  = 1;
-        constexpr uint8_t DATA_LENGTH_LIFTS_SET   = 1;
-        constexpr uint8_t DATA_LENGTH_LED_SET     = 2;
-        constexpr uint8_t DATA_LENGTH_HEARTBEAT   = 0;
-
-        // MCU发送给导航的上传ID
-        enum class UploadID : uint8_t {
-            MEC_ARM_UPLOAD   = 0x11,
-            LIFTS_UPLOAD     = 0x12,
-            JAW_MOTOR_UPLOAD = 0x13
-        };
-
-        // 上传数据长度
-        constexpr uint8_t DATA_LENGTH_MEC_ARM   = 4;
-        constexpr uint8_t DATA_LENGTH_LIFTS     = 4;
-        constexpr uint8_t DATA_LENGTH_JAW_MOTOR = 6;
-
         // 定时器结构体
         struct TimerHostComm {
             uint64_t OSTimer_HostComm;
@@ -247,196 +242,43 @@ namespace ambot_driver_ns
             uint8_t CRC_L;       // CRC16低字节
         };
 
-        // 初始化全局变量
-        uint8_t PerComm_Step = 0;
-        uint8_t HostComm_Step = 0;
-        uint16_t crc_rslt = 0;
+    extern TimerHostComm Timer_HostComm;
+    // extern HeartBeat HeartBeat;  // 注释掉的变量也需要声明
 
-        // 缓冲区初始化
-        uint8_t HostComm_Rx_buff[32] = {0};  // 接收数据数组
-        uint8_t HostComm_Tx_buff[32] = {0};  // 发送数据数组
-        static uint8_t databuf_temp[32] = {0};
+    // ----------- MCU->导航的数据结构 -----------
+    extern UploadMecArm commmecarm;
+    extern UploadLifts commlifts;
+    extern UploadJaw commjaw;
 
-        // 定时器和心跳结构体初始化
-        TimerHostComm Timer_HostComm = {};
-        // HeartBeat HeartBeat = {};
+    // ----------- MCU->orin的通信帧 -----------
+    extern CommFrame uploadframeMecarm;
+    extern CommFrame uploadframeLifts;
+    extern CommFrame uploadframeJaw;
 
-        /*****************************************************/ 
-        // MCU发送给导航的数据结构初始化
-        UploadMecArm commmecarm = {};
-        UploadLifts commlifts = {};
-        UploadJaw commjaw = {};
+    // ----------- orin->MCU的数据结构 -----------
+    extern TimeSet dataTimeSet;
+    extern MopSet dataMopSet;
+    extern JawSet dataJawSet;
+    extern CatcherSet dataCatcherSet;
+    extern MagnetSet dataMagnetSet;
+    extern MecArmSet dataMecArmSet;
+    extern LiftsSet dataLiftsSet;
+    extern LedSet dataLedSet;
+    extern Heartbeat dataHeartbeat;
 
-        // MCU发送给导航的帧结构初始化
-        CommFrame uploadframeMecarm = {
-            .head_H = FRAME_HEAD_H,
-            .head_L = FRAME_HEAD_L,
-            .frame_ID_H = 0,
-            .frame_ID_L = 0,
-            .length = 1 + DATA_LENGTH_MEC_ARM,
-            .cmd_ID = static_cast<uint8_t>(UploadID::MEC_ARM_UPLOAD),
-            .databuf = commmecarm.data,
-            .CRC_H = 0,
-            .CRC_L = 0
-        };
+    // ----------- orin->MCU的通信帧 -----------
+    extern CommFrame cmdframTimeSet;
+    extern CommFrame cmdframMopSet;
+    extern CommFrame cmdframJawSet;
+    extern CommFrame cmdframCatcherSet;
+    extern CommFrame cmdframMagnetet;
+    extern CommFrame cmdframMecArmSet;
+    extern CommFrame cmdframLiftsSet;
+    extern CommFrame cmdframLedSet;
+    // extern CommFrame cmdframHeartbeat;
 
-        CommFrame uploadframeLifts = {
-            .head_H = FRAME_HEAD_H,
-            .head_L = FRAME_HEAD_L,
-            .frame_ID_H = 0,
-            .frame_ID_L = 0,
-            .length = 1 + DATA_LENGTH_LIFTS,
-            .cmd_ID = static_cast<uint8_t>(UploadID::LIFTS_UPLOAD),
-            .databuf = commlifts.data,
-            .CRC_H = 0,
-            .CRC_L = 0
-        };
-
-        CommFrame uploadframeJaw = {
-            .head_H = FRAME_HEAD_H,
-            .head_L = FRAME_HEAD_L,
-            .frame_ID_H = 0,
-            .frame_ID_L = 0,
-            .length = 1 + DATA_LENGTH_JAW_MOTOR,
-            .cmd_ID = static_cast<uint8_t>(UploadID::JAW_MOTOR_UPLOAD),
-            .databuf = commjaw.data,
-            .CRC_H = 0,
-            .CRC_L = 0
-        };
-
-        /*****************************************************/ 
-        // 导航发送给MCU的数据结构初始化
-        TimeSet dataTimeSet = {};
-        MopSet dataMopSet = {};
-        JawSet dataJawSet = {};
-        CatcherSet dataCatcherSet = {};
-        MagnetSet dataMagnetSet = {};
-        MecArmSet dataMecArmSet = {};
-        LiftsSet dataLiftsSet = {};
-        LedSet dataLedSet = {};
-        Heartbeat dataHeartbeat = {};
-
-        // 导航发送给MCU的帧结构初始化
-        CommFrame cmdframTimeSet = {
-            .head_H = 0,
-            .head_L = 0,
-            .frame_ID_H = 0,
-            .frame_ID_L = 0,
-            .length = 1 + DATA_LENGTH_TIME_SET,
-            .cmd_ID = static_cast<uint8_t>(StoreNum::TIME_SET),
-            .databuf = dataTimeSet.data,
-            .CRC_H = 0,
-            .CRC_L = 0
-        };
-
-        CommFrame cmdframMopSet = {
-            .head_H = 0,
-            .head_L = 0,
-            .frame_ID_H = 0,
-            .frame_ID_L = 0,
-            .length = 1 + DATA_LENGTH_MOP_SET,
-            .cmd_ID = static_cast<uint8_t>(StoreNum::MOP_SET),
-            .databuf = dataMopSet.data,
-            .CRC_H = 0,
-            .CRC_L = 0
-        };
-
-        CommFrame cmdframJawSet = {
-            .head_H = 0,
-            .head_L = 0,
-            .frame_ID_H = 0,
-            .frame_ID_L = 0,
-            .length = 1 + DATA_LENGTH_JAW_SET,
-            .cmd_ID = static_cast<uint8_t>(StoreNum::JAW_SET),
-            .databuf = dataJawSet.data,
-            .CRC_H = 0,
-            .CRC_L = 0
-        };
-
-        CommFrame cmdframCatcherSet = {
-            .head_H = 0,
-            .head_L = 0,
-            .frame_ID_H = 0,
-            .frame_ID_L = 0,
-            .length = 1 + DATA_LENGTH_CATCHER_SET,
-            .cmd_ID = static_cast<uint8_t>(StoreNum::CATCHER_SET),
-            .databuf = dataCatcherSet.data,
-            .CRC_H = 0,
-            .CRC_L = 0
-        };
-
-        CommFrame cmdframMagnetet = {
-            .head_H = 0,
-            .head_L = 0,
-            .frame_ID_H = 0,
-            .frame_ID_L = 0,
-            .length = 1 + DATA_LENGTH_MAGNET_SET,
-            .cmd_ID = static_cast<uint8_t>(StoreNum::MAGNET_SET),
-            .databuf = dataMagnetSet.data,
-            .CRC_H = 0,
-            .CRC_L = 0
-        };
-
-        CommFrame cmdframMecArmSet = {
-            .head_H = 0,
-            .head_L = 0,
-            .frame_ID_H = 0,
-            .frame_ID_L = 0,
-            .length = 1 + DATA_LENGTH_MECARM_SET,
-            .cmd_ID = static_cast<uint8_t>(StoreNum::MECARM_SET),
-            .databuf = &dataMecArmSet.data,
-            .CRC_H = 0,
-            .CRC_L = 0
-        };
-
-        CommFrame cmdframLiftsSet = {
-            .head_H = 0,
-            .head_L = 0,
-            .frame_ID_H = 0,
-            .frame_ID_L = 0,
-            .length = 1 + DATA_LENGTH_LIFTS_SET,
-            .cmd_ID = static_cast<uint8_t>(StoreNum::LIFTS_SET),
-            .databuf = &dataLiftsSet.data,
-            .CRC_H = 0,
-            .CRC_L = 0
-        };
-
-        CommFrame cmdframLedSet = {
-            .head_H = 0,
-            .head_L = 0,
-            .frame_ID_H = 0,
-            .frame_ID_L = 0,
-            .length = 1 + DATA_LENGTH_LED_SET,
-            .cmd_ID = static_cast<uint8_t>(StoreNum::LED_SET),
-            .databuf = dataLedSet.data,
-            .CRC_H = 0,
-            .CRC_L = 0
-        };
-
-        // CommFrame cmdframHeartbeat = {
-        //     .head_H = 0,
-        //     .head_L = 0,
-        //     .frame_ID_H = 0,
-        //     .frame_ID_L = 0,
-        //     .length = 1 + DATA_LENGTH_HEARTBEAT,
-        //     .cmd_ID = static_cast<uint8_t>(StoreNum::HEARTBEAT),
-        //     .databuf = &dataHeartbeat.data,
-        //     .CRC_H = 0,
-        //     .CRC_L = 0
-        // };
-
-        // 命令帧组初始化
-        CommFrame* cmdframGroup[8] = {
-            &cmdframTimeSet,
-            &cmdframMopSet,
-            &cmdframJawSet,
-            &cmdframCatcherSet,
-            &cmdframMagnetet,
-            &cmdframMecArmSet,
-            &cmdframLiftsSet,
-            &cmdframLedSet
-        };    
-    
+    // ----------- 命令帧组 -----------
+    extern CommFrame* cmdframGroup[8];
 }
 
 #endif 

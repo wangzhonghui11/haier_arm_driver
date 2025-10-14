@@ -5,7 +5,7 @@ project(ambot_driver_node)
 # 查找依赖
 ##############################################################################
 # 启用新版头文件安装行为（兼容所有ROS2版本）
-option(USE_SCOPED_HEADER_INSTALL_DIR "Use scoped header install directory" ON)
+#option(USE_SCOPED_HEADER_INSTALL_DIR "Use scoped header install directory" ON)
 find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()
 
@@ -65,7 +65,7 @@ ament_auto_package(
 
   launch
   config
-  USE_SCOPED_HEADER_INSTALL_DIR
+  #USE_SCOPED_HEADER_INSTALL_DIR
 )
 
 # 如果需要特殊处理某些文件的安装，可以额外添加

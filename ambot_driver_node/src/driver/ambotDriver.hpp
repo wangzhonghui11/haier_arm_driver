@@ -21,7 +21,7 @@
 #include <type_traits>
 #include <sys/time.h>
 #include <iomanip>
-// #include "protocolStruct.hpp"
+#include "protocolStruct.hpp"
 // #include "privateProtocol.hpp"
 
 // #include <ambot_msg/JointState.h>
@@ -62,7 +62,6 @@ namespace ambot_driver_ns{
         /* construct and deconstruct function */
         AmbotDriverCLASS(RobotDriver_TP &input);
         ~AmbotDriverCLASS();
-
         /* open function */
         bool initial(void);
         // bool disableAllMotor(void);
