@@ -1,0 +1,27 @@
+ambot_driver_node:
+  ros__parameters:
+    ambot_type: "ambot_W1"
+    
+    ambot_devices:
+      motor_device: "/dev/ttyUSB0"
+      # sensor_device: "/dev/SENSOR_MCU"
+    
+    ambot_params:  
+      motor_baud: 1000000
+      joint_motor_num: 12
+      wheel_motor_num: 0
+      motor_num: 12
+      ros_rate: 100
+      car_max_vel: 0.2
+      wheel_radius: 0.06
+    
+    ambot_const_params:
+      motor_control_mode: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+      motor_max_angle: [1.57, 1.57, 1.57, 1.57, 1.57, 1.57, 1.57, 1.57, 1.57, 1.57, 1.57, 1.57]
+      motor_min_angle: [-1.57, -1.57, -1.57, -1.57, -1.57, -1.57, -1.57, -1.57, -1.57, -1.57, -1.57, -1.57]
+      motor_velocity: [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+      motor_position_offset: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      motor_axis_direction: [1, 1, 1, 1, -1, -1, -1, 1, 1, -1, -1, -1]
+    
+    robot_subscribe_topic: ["modelValues", "terminateControllerValues"]
+    robot_advertise_topic: ["sensorValues", "terminateRobotValues"]

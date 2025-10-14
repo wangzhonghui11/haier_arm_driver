@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>ambot_driver_node</name>
+  <version>1.0.0</version>
+  <description>ROS2 driver node for robotic arm control</description>
+  <maintainer email="wangzhonghui@haier.com">Zhonghui Wang</maintainer>
+  <license>Apache License 2.0</license>
+
+  <!-- 构建工具依赖 -->
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_auto</buildtool_depend>
+
+  <!-- 核心ROS2依赖 -->
+  <depend>rclcpp</depend>
+  <depend>rclcpp_components</depend>
+  <depend>std_msgs</depend>
+  
+  <!-- 硬件通信相关依赖 -->
+  <!-- <depend>serial</depend>
+  <depend>libserial</depend> -->
+  
+  <!-- 机器人相关依赖 -->
+  <!-- <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>tf2_ros</depend>
+  <depend>control_msgs</depend> -->
+  
+  <!-- 自定义消息依赖 -->
+  <!-- <depend>ambot_msg</depend> -->
+
+  <!-- 测试依赖 -->
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+  <test_depend>ament_cmake_gtest</test_depend>
+
+  <!-- 组件导出 -->
+  <export>
+    <build_type>ament_cmake</build_type>
+    
+    <!-- 如果使用组件 -->
+    <rclcpp_components>
+      <plugin plugin_name="arm_driver_plugin" 
+              class_name="arm_driver::ArmDriverComponent" />
+    </rclcpp_components>
+  </export>
+</package>
