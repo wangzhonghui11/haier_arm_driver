@@ -14,7 +14,7 @@
 #include <string.h>
 #include "protocolStruct.hpp"
 #include "crcModbus.hpp"
-
+#include "queue.hpp"
 namespace ambot_driver_ns
 {
 

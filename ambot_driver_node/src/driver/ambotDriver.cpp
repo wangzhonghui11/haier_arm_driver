@@ -114,7 +114,7 @@ namespace ambot_driver_ns{
     // *   @return     true:get successful   false:get failed
     //     */
      #define TEMP_READ_BUFFER_LENGTH 256*8
-     #define LEN_MAX 1024
+     #define LEN_MAX 4096
     // 全局变量用于计算频率
     static auto lastTime = std::chrono::steady_clock::now();
     static size_t totalBytes = 0;
@@ -155,7 +155,7 @@ namespace ambot_driver_ns{
     void AmbotDriverCLASS::printByteStream(const uint8_t* data, ssize_t count) {
             // 调试控制参数
             constexpr bool SHOW_ASCII = true;
-            constexpr int BYTES_PER_LINE = 16;
+            constexpr int BYTES_PER_LINE = 32;
             constexpr int MAX_LINES = 10;
             
             if (count <= 0) return;
@@ -225,7 +225,7 @@ namespace ambot_driver_ns{
                 printf("receive data thread exit!!\n");
                 pthread_exit(NULL);
             }
-            usleep(10000);
+            usleep(100000);
             // 6.read data and analysis
             /** ssize_t read(int fd, void *buf, size_t count);
             ​​参数​​:
@@ -238,15 +238,15 @@ namespace ambot_driver_ns{
             返回-1表示出错，错误代码在 errno中
             */
         //    currentReadCount=printReceivedDataWithFrequency(motorFd);
-            currentReadCount = read(motorFd, read_buffer, LEN_MAX);
+            currentReadCount = read(motorFd, read_buffer,LEN_MAX);
             if (currentReadCount > 0) {
-                // 调试模式才打印原始数据
+            //     // 调试模式才打印原始数据
                 #ifdef DEBUG_MODE
                 printByteStream(read_buffer, currentReadCount);
                 #endif
                 
                 // 协议处理（自动包含帧格式打印）
-                //protocol->processFrame(read_buffer,currentReadCount); 
+            protocol->processFrame(read_buffer,currentReadCount); 
             } 
             // for (ssize_t i = 0; i < currentReadCount; ++i) {
             //     std::cout << std::hex << std::setw(2) << std::setfill('0') 

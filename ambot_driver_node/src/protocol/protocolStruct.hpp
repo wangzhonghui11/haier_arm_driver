@@ -35,7 +35,7 @@ namespace ambot_driver_ns
 
     #define ID_MEC_ARM_STORE  0
     #define ID_LIFTS_STORE  1
-    #define ID_JAW_MOTOR_UTORE  2
+    #define ID_JAW_MOTOR_STORE 2
     #define FRAME_HEAD_H  0xF0
     #define FRAME_HEAD_L  0xF0
 

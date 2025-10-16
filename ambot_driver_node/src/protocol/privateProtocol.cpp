@@ -10,7 +10,7 @@
 
 namespace ambot_driver_ns
 {
-
+        UnifiedDeviceQueue arm_queue; // 统一队列替换原有三个队列
         TimerHostComm Timer_HostComm = {};
         // HeartBeat HeartBeat = {};
 
@@ -220,25 +220,31 @@ namespace ambot_driver_ns
             if ((data[i]==FRAME_HEAD_H)&& (data[i + 1] == FRAME_HEAD_L)) {
                 store_length = 0;
                 cmdId = data[i + 5]; // 命令码ID 
+                DeviceType type;
                 switch (cmdId) {
                     case ID_MEC_ARM_UPLOAD:
+                        type = DeviceType::MEC_ARM;
                         store_length = comm_frame_store(statusframGroup[ID_MEC_ARM_STORE], &data[i]);
+                        arm_queue.push(type, statusframGroup[ID_MEC_ARM_STORE]->databuf,store_length-1);
                         #ifdef DEBUG_MODE
                         statusframGroup[ID_MEC_ARM_STORE]->print();  
                         #endif
                         break;
                         
                     case ID_LIFTS_UPLOAD:
+                         type = DeviceType::LIFTS;
                         store_length = comm_frame_store(statusframGroup[ID_LIFTS_STORE], &data[i]);
+                        arm_queue.push(type, statusframGroup[ID_LIFTS_STORE]->databuf,store_length-1);
                         #ifdef DEBUG_MODE
                         statusframGroup[ID_LIFTS_STORE]->print();                      
                         #endif                        
                         break;
                         
                     case ID_JAW_MOTOR_UPLOAD:
-                        store_length = comm_frame_store(statusframGroup[ID_JAW_MOTOR_UTORE], &data[i]);
+                        store_length = comm_frame_store(statusframGroup[ID_JAW_MOTOR_STORE], &data[i]);
+                      arm_queue.push(type, statusframGroup[ID_JAW_MOTOR_STORE]->databuf,store_length-1);
                         #ifdef DEBUG_MODE
-                        statusframGroup[ID_JAW_MOTOR_UTORE]->print();                      
+                        statusframGroup[ID_JAW_MOTOR_STORE]->print();                      
                         #endif   
                         break;
                 }
