@@ -80,18 +80,18 @@ bool Robot::run(void)
         //     ros->setTerminateValue();
         //     return false;                   //if return false, program will end, then will go to deconstruct function
         // }
-        // ros->robotFbValuePub(robotDriver->rosData);
-        // ros->getJointMotorCommand(ambotCommand);
+        ros->robotFbValuePub(robotDriver->rosData);
+        ros->getJointMotorCommand(ambotCommand);
 
-        // // if (ros->robotFeatures.robotType  == robotDriver->robotType.at(ambot_W1))
-        // //     ros->getWheelMotorCommand(wheelVelCmd);
-        // if(!robotDriver->threadStop)
-        // {
-        //     robotDriver->setMotorLocomotionCommand(ambotCommand, wheelVelCmd);
-        // }else
-        // {
-        //     ros->setTerminateValue();
-        // }
+        // if (ros->robotFeatures.robotType  == robotDriver->robotType.at(ambot_W1))
+        //     ros->getWheelMotorCommand(wheelVelCmd);
+        if(!robotDriver->threadStop)
+        {
+            robotDriver->setMotorLocomotionCommand(ambotCommand, wheelVelCmd);
+        }else
+        {
+            ros->setTerminateValue();
+        }
         ros->rosSleep();
         return true; 
     }else

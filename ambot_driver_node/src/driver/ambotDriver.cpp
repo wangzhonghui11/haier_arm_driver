@@ -86,6 +86,10 @@ namespace ambot_driver_ns{
     {
     }
     
+    ssize_t AmbotDriverCLASS::txPacket(protocolOutputBuffer_TP &out)
+    {
+        return  write(motorFd, out.buffer, out.length);
+    }
 
 
 
@@ -156,12 +160,9 @@ namespace ambot_driver_ns{
             // 调试控制参数
             constexpr bool SHOW_ASCII = true;
             constexpr int BYTES_PER_LINE = 32;
-            constexpr int MAX_LINES = 10;
-            
-            if (count <= 0) return;
-            
-            std::ios_base::fmtflags f(std::cout.flags()); // 保存格式状态
-            
+            constexpr int MAX_LINES = 10;         
+            if (count <= 0) return;        
+            std::ios_base::fmtflags f(std::cout.flags()); // 保存格式状态          
             // 打印头信息
             std::cout << "\n▬▬▶ Read " << count << " bytes:\n";
             
@@ -172,12 +173,10 @@ namespace ambot_driver_ns{
                 if (i % BYTES_PER_LINE == 0) {
                     std::cout << "0x" << std::setw(4) << std::setfill('0') 
                             << std::hex << i << ": ";
-                }
-                
+                }                
                 // 十六进制打印
                 std::cout << std::setw(2) << std::setfill('0') 
-                        << static_cast<int>(data[i]) << " ";
-                
+                        << static_cast<int>(data[i]) << " ";            
                 // 行尾处理
                 if ((i+1) % BYTES_PER_LINE == 0 || i == count-1) {
                     if (SHOW_ASCII) {
@@ -195,8 +194,7 @@ namespace ambot_driver_ns{
                     std::cout << "\n";
                     lines_printed++;
                 }
-            }
-            
+            }            
             if (count > MAX_LINES * BYTES_PER_LINE) {
                 std::cout << "[... " << (count - MAX_LINES * BYTES_PER_LINE) 
                         << " bytes omitted ...]\n";
@@ -247,19 +245,14 @@ namespace ambot_driver_ns{
             usleep(200000);
            if (threadStop)
             {
-                printf("receive data thread exit!!\n");
+                printf("Proccess data thread exit!!\n");
                 pthread_exit(NULL);
             }
             protocol->data_consumer();
        }
 
     }
-    // /**  
-    // *   @brief      new thread to update motor feedback data
-    //     Parameters:
-    // *   @param      arg   	[in]this is a pointer to deliver parameter to thread
-    // *   @return     none  
-    //     */
+
     void* AmbotDriverCLASS::newReadMotorThread(void* arg)
     {
         AmbotDriverCLASS* ptr = (AmbotDriverCLASS*) arg;
@@ -272,13 +265,6 @@ namespace ambot_driver_ns{
         ptr->ProccessAllMotorStateFromMCU();
         pthread_exit(0);
     }
-
-    // /**  
-    // *   @brief      create a receive data analysis thread
-    //     Parameters:
-    // *   @param      void
-    // *   @return     none
-    //     */
     void AmbotDriverCLASS::createReceiveThread(void)
     {
         if(pthread_create(&motorTid, NULL, newReadMotorThread, (void *)this) != 0)

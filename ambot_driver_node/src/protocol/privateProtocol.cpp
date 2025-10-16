@@ -315,4 +315,9 @@ namespace ambot_driver_ns
         
         return store_length;
     }
+    // void PrivateProtocolCLASS::createCommandFrame(const uint8_t functionCode, const uint8_t commandNum, const protocolInputBuffer_TP& in, protocolOutputBuffer_TP &output)
+    // {
+
+    // }
+
 }

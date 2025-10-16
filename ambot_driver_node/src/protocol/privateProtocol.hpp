@@ -29,6 +29,8 @@ namespace ambot_driver_ns
         uint8_t processFrame(const uint8_t* data, uint16_t length);
         uint8_t comm_frame_store(CommFrame* statusframGroup, const uint8_t* databuf);
         void  data_consumer(); 
+        //void createCommandFrame(const uint8_t functionCode, const uint8_t commandNum, const protocolInputBuffer_TP& in, protocolOutputBuffer_TP &output);
+
     };
 
     /**  

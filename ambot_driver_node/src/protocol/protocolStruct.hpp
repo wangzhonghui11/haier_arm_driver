@@ -32,7 +32,7 @@ namespace ambot_driver_ns
     #define COUT_BOLD_MAGENTA "\033[1m\033[35m"      /* Bold Magenta */
     #define COUT_BOLD_CYAN    "\033[1m\033[36m"      /* Bold Cyan */
     #define COUT_BOLD_WHITE   "\033[1m\033[37m"      /* Bold White */
-
+    #define WRITE_BUFFER_SIZE 4096
     #define ID_MEC_ARM_STORE  0
     #define ID_LIFTS_STORE  1
     #define ID_JAW_MOTOR_STORE 2
@@ -78,6 +78,13 @@ namespace ambot_driver_ns
     #define DATA_LEGTH_MEC_ARM       4
     #define DATA_LEGTH_LIFTS         4
     #define DATA_LEGTH_JAW_MOTOR     6
+    
+    typedef struct protocolOutputBuffer_TP
+    {
+        uint8_t buffer[WRITE_BUFFER_SIZE];
+        uint16_t length;
+    }protocolOutputBuffer_TP;
+    
     /*this enum indicate all function code  according to our private protocol*/
         // 定时器结构体
         struct TimerHostComm {

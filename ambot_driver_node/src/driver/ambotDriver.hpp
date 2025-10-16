@@ -24,9 +24,6 @@
 #include "protocolStruct.hpp"
 #include "privateProtocol.hpp"
 #include <chrono>
-// #include <ambot_msg/JointState.h>
-// #include <ambot_msg/AmbotCommand.h>
-// #include <ambot_msg/AmbotState.h>
 namespace ambot_driver_ns{
 
     typedef struct 
@@ -57,15 +54,12 @@ namespace ambot_driver_ns{
     public:
         bool threadStop;
         std::vector<std::string> robotType;
-        // ambot_msg::AmbotState rosData;          //ros message data, wait to publish 
-        /* construct and deconstruct function */
+
         AmbotDriverCLASS(RobotDriver_TP &input);
         ~AmbotDriverCLASS();
         /* open function */
         bool initial(void);
-        // bool disableAllMotor(void);
-        // bool setMotorLocomotionCommand(const ambot_msg::AmbotCommand &command, const std::vector<float> &wheel);
-        // void getWheelVelocity(std::vector<float> &out);
+
     private:
         PrivateProtocolCLASS *protocol;         //communication protocol instance
         const RobotDriver_TP robotParams;       //the const input robot params
@@ -73,38 +67,17 @@ namespace ambot_driver_ns{
         int motorFd, sensorFd;                  //low driver motor file ID and sensor ID
         pthread_t motorTid, sensorTid;          //motor read feedback thread ID and sensor read thread ID
         size_t processBuffer(const uint8_t* data, size_t length) ;
-        // std::vector<int> motorIDExist;          //current exist motor ID     
-        // int motorNumExist;                      //current exist motor num
 
-        // /*control command frame build and receive variables*/
-        // std::vector<MotorFB_TP> motorFB;        //current exist motor feedback data
-        // std::vector<float> wheelVel;            
+        ssize_t txPacket(protocolOutputBuffer_TP &out);
 
-        // SensorFB_TP sensorFB;                   //sensor data, include imu and etc....
-        // protocolInputBuffer_TP motorCommandSum;     //all motor command data
-        // protocolInputBuffer_TP motorCommandExist;   //current exist motor command data 
-
-        // ssize_t txPacket(protocolOutputBuffer_TP &out);
-        // bool waitCommandResponse(const uint8_t commandNumber);
-        // bool waitRequestIDResponse(const uint8_t commandNumber, std::vector<int> &id);
-        // template<typename T> bool setAllMotorOneFeature(const uint8_t inputCommandCode, const std::vector<int> &IDBuffer, const std::vector<T> &inputData);
-        // bool requestAllMotorID(std::vector<int> &out);
-        // //build a new thread to receive and do data analysis 
-        // void motorRawState2RosPublish(std::vector<MotorFB_TP> &input, ambot_msg::AmbotState &output);
-        // void sensorRaw2RosPublish(const SensorFB_TP &in, ambot_msg::AmbotState &out);
         void getAllMotorStateFromMCU(void);
-        // void getSensorDataFromMCU(void);
-         static void* newReadMotorThread(void* arg);
-        // static void* newReadSensorThread(void* arg);
-         void createReceiveThread(void);
-          static void* newProccessMotorThread(void* arg);
+        static void* newReadMotorThread(void* arg);
+        void createReceiveThread(void);
+        static void* newProccessMotorThread(void* arg);
         ssize_t printReceivedDataWithFrequency(int motorFd) ;
         void ProccessAllMotorStateFromMCU(void);
-        // bool checkAllMotorException(void);
-        // void updateJointCmd(const ambot_msg::AmbotCommand& in);
-        // void updateWheelCmd(const std::vector<float> &in);
-        // void updateExistMotorCmd(void);
-        // void updateWheelFb(void);
+
+
     };
     
 }
