@@ -10,7 +10,7 @@
 #define __PROTOCOL_STRUCT_HPP__
 
 #include <iostream>
-
+#define DEBUG_MODE 1
 namespace ambot_driver_ns
 {
     /*these macro for global use*/
@@ -33,9 +33,9 @@ namespace ambot_driver_ns
     #define COUT_BOLD_CYAN    "\033[1m\033[36m"      /* Bold Cyan */
     #define COUT_BOLD_WHITE   "\033[1m\033[37m"      /* Bold White */
 
-    #define ambot_N1  0
-    #define ambot_W1  1
-    #define ambot_P1  2
+    #define ID_MEC_ARM_STORE  0
+    #define ID_LIFTS_STORE  1
+    #define ID_JAW_MOTOR_UTORE  2
     #define FRAME_HEAD_H  0xF0
     #define FRAME_HEAD_L  0xF0
 
@@ -240,6 +240,22 @@ namespace ambot_driver_ns
             uint8_t* databuf;    // 数据缓冲区
             uint8_t CRC_H;       // CRC16高字节
             uint8_t CRC_L;       // CRC16低字节
+                void print() const {
+                std::cout << "Frame Info: "
+                  << "\n  Head: 0x" << std::hex << (int)head_H << " 0x" << (int)head_L
+                  << "\n  FrameID: 0x" << (int)frame_ID_H << " 0x" << (int)frame_ID_L
+                  << "\n  Length: " << std::dec << (int)length
+                  << "\n  CmdID: 0x" << std::hex << (int)cmd_ID
+                  << "\n  CRC: 0x" << (int)CRC_H << " 0x" << (int)CRC_L
+                  << std::endl;
+        
+        // 打印数据内容（示例打印前16字节）
+        std::cout << "  Data: ";
+        for (int i = 0; i < std::min(16, (int)length-1); ++i) {
+            std::cout << "0x" << std::hex << (int)databuf[i] << " ";
+        }
+        std::cout << std::endl;
+    }
         };
 
     extern TimerHostComm Timer_HostComm;
@@ -276,9 +292,10 @@ namespace ambot_driver_ns
     extern CommFrame cmdframLiftsSet;
     extern CommFrame cmdframLedSet;
     // extern CommFrame cmdframHeartbeat;
-
+    extern void  initializeFrames();
     // ----------- 命令帧组 -----------
     extern CommFrame* cmdframGroup[8];
-}
+    extern CommFrame* statusframGroup[3];  
 
+    }
 #endif 

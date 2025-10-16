@@ -41,8 +41,8 @@ include_directories(
 ament_auto_add_library(ambot_lib STATIC
   src/driver/ambotDriver.cpp
   src/driver/robot.cpp
-  # src/protocol/privateProtocol.cpp
-  # src/protocol/crcModbus.cpp
+  src/protocol/privateProtocol.cpp
+  src/protocol/crcModbus.cpp
   src/ros/ambotRosClass.cpp
 )
 

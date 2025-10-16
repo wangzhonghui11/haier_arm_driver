@@ -22,12 +22,11 @@
 #include <sys/time.h>
 #include <iomanip>
 #include "protocolStruct.hpp"
-// #include "privateProtocol.hpp"
-
+#include "privateProtocol.hpp"
+#include <chrono>
 // #include <ambot_msg/JointState.h>
 // #include <ambot_msg/AmbotCommand.h>
 // #include <ambot_msg/AmbotState.h>
-
 namespace ambot_driver_ns{
 
     typedef struct 
@@ -68,9 +67,9 @@ namespace ambot_driver_ns{
         // bool setMotorLocomotionCommand(const ambot_msg::AmbotCommand &command, const std::vector<float> &wheel);
         // void getWheelVelocity(std::vector<float> &out);
     private:
-        // PrivateProtocolCLASS *protocol;         //communication protocol instance
+        PrivateProtocolCLASS *protocol;         //communication protocol instance
         const RobotDriver_TP robotParams;       //the const input robot params
-
+        void printByteStream(const uint8_t* data, ssize_t count);
         int motorFd, sensorFd;                  //low driver motor file ID and sensor ID
         pthread_t motorTid, sensorTid;          //motor read feedback thread ID and sensor read thread ID
         size_t processBuffer(const uint8_t* data, size_t length) ;
@@ -98,7 +97,7 @@ namespace ambot_driver_ns{
          static void* newReadMotorThread(void* arg);
         // static void* newReadSensorThread(void* arg);
          void createReceiveThread(void);
-
+        ssize_t printReceivedDataWithFrequency(int motorFd) ;
         // bool checkAllMotorException(void);
         // void updateJointCmd(const ambot_msg::AmbotCommand& in);
         // void updateWheelCmd(const std::vector<float> &in);
