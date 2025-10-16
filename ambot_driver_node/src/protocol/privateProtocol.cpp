@@ -61,6 +61,7 @@ namespace ambot_driver_ns
             &uploadframeLifts,
             &uploadframeJaw
         };
+        
 
         /*****************************************************/ 
         // 导航发送给MCU的数据结构初始化
@@ -314,6 +315,42 @@ namespace ambot_driver_ns
         }
         
         return store_length;
+    }
+
+    uint8_t PrivateProtocolCLASS::comm_frame_upload(CommFrame* frame, uint8_t* output_buf) {
+        // 参数检查
+        if (!frame || !frame->databuf || !output_buf || frame->length < 1 || frame->length > 256) {
+            return 0;  // 或抛出异常
+        }
+
+        // 线程安全的计数器
+        static std::atomic<uint16_t> upload_cnt{0};
+        const uint16_t frame_id = ++upload_cnt;
+        const uint16_t data_length = frame->length - 1;
+
+        // 设置Frame ID
+        frame->frame_ID_H = static_cast<uint8_t>((frame_id >> 8) & 0xFF);
+        frame->frame_ID_L = static_cast<uint8_t>(frame_id & 0xFF);
+
+        // 准备CRC计算数据
+        uint8_t databuf_temp[256] = {0};
+        databuf_temp[0] = frame->cmd_ID;
+        for (uint8_t i = 1; i <= data_length; i++) {
+            databuf_temp[i] = frame->databuf[i - 1];
+        }
+
+        // 计算CRC
+        uint16_t crc_value = usMBCRC16(databuf_temp, frame->length);
+        frame->CRC_H = static_cast<uint8_t>(crc_value >> 8);
+        frame->CRC_L = static_cast<uint8_t>(crc_value & 0xFF);
+
+        // 合并数据到output_buf
+        memcpy(output_buf, frame, 6);                               // 帧头
+        memcpy(output_buf + 6, frame->databuf, data_length);        // 数据
+        memcpy(output_buf + 6 + data_length, &frame->CRC_H, 1);     // CRC高字节
+        memcpy(output_buf + 6 + data_length + 1, &frame->CRC_L, 1); // CRC低字节
+        size_t total_bytes=6 + data_length + 2;
+        return total_bytes; 
     }
     // void PrivateProtocolCLASS::createCommandFrame(const uint8_t functionCode, const uint8_t commandNum, const protocolInputBuffer_TP& in, protocolOutputBuffer_TP &output)
     // {

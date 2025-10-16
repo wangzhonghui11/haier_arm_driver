@@ -117,8 +117,7 @@ namespace ambot_driver_ns{
     // *   @param      none
     // *   @return     true:get successful   false:get failed
     //     */
-     #define TEMP_READ_BUFFER_LENGTH 256*8
-     #define LEN_MAX 4096
+
     // 全局变量用于计算频率
     static auto lastTime = std::chrono::steady_clock::now();
     static size_t totalBytes = 0;
@@ -207,13 +206,8 @@ namespace ambot_driver_ns{
         // 1. init all local variables
         uint8_t inFlag;
         uint8_t currentReadCount;
-        int16_t frameHeadIndex, currentTail;
-        uint8_t tempReadBuffer[TEMP_READ_BUFFER_LENGTH];
-        uint8_t motorFeedbackBuffer[TEMP_READ_BUFFER_LENGTH];
         uint8_t read_buffer[LEN_MAX];
         // 2. set init value to variables
-        frameHeadIndex = currentTail = 0;
-
         // 3.wait for receive enough data to analysis
         for(;;)
         {
@@ -273,6 +267,16 @@ namespace ambot_driver_ns{
             perror("Create read mcu data thread fail!\n");
     }
 
+    bool AmbotDriverCLASS::setMotorLocomotionCommand()
+    {
+        static protocolOutputBuffer_TP sendBuff;
+        //update all motor command data
+        sendBuff.length=protocol->comm_frame_store(cmdframGroup[0],sendBuff.buffer);
+        if(sendBuff.length != txPacket(sendBuff))
+            return false;
+        // don't wait for set command response now 
+        return true;
+    }
 
 }
 

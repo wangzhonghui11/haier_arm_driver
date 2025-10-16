@@ -8,7 +8,7 @@
 
 #ifndef __PRIVATE_PROTOCOL_HPP__
 #define __PRIVATE_PROTOCOL_HPP__
-
+#include <atomic>
 #include <iostream>
 #include <vector>
 #include <string.h>
@@ -30,7 +30,8 @@ namespace ambot_driver_ns
         uint8_t comm_frame_store(CommFrame* statusframGroup, const uint8_t* databuf);
         void  data_consumer(); 
         //void createCommandFrame(const uint8_t functionCode, const uint8_t commandNum, const protocolInputBuffer_TP& in, protocolOutputBuffer_TP &output);
-
+        uint8_t comm_frame_upload(CommFrame* frame, uint8_t* output_buf) ;
+        
     };
 
     /**  

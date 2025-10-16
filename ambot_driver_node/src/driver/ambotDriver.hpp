@@ -25,7 +25,7 @@
 #include "privateProtocol.hpp"
 #include <chrono>
 namespace ambot_driver_ns{
-
+     #define LEN_MAX 4096
     typedef struct 
     {
         std::string robotType;
@@ -69,7 +69,7 @@ namespace ambot_driver_ns{
         size_t processBuffer(const uint8_t* data, size_t length) ;
 
         ssize_t txPacket(protocolOutputBuffer_TP &out);
-
+        bool setMotorLocomotionCommand();
         void getAllMotorStateFromMCU(void);
         static void* newReadMotorThread(void* arg);
         void createReceiveThread(void);
