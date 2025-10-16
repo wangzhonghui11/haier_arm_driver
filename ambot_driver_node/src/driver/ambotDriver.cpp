@@ -217,7 +217,7 @@ namespace ambot_driver_ns{
         frameHeadIndex = currentTail = 0;
 
         // 3.wait for receive enough data to analysis
-        while (1)
+        for(;;)
         {
             // 4. if detect ctrl+C, current thread will exit 
             if (threadStop)
@@ -226,17 +226,6 @@ namespace ambot_driver_ns{
                 pthread_exit(NULL);
             }
             usleep(100000);
-            // 6.read data and analysis
-            /** ssize_t read(int fd, void *buf, size_t count);
-            ​​参数​​:
-            fd: 文件描述符（在您代码中是 motorFd）
-            buf: 存储读取数据的缓冲区指针（&tempReadBuffer[currentTail]）
-            count: 要读取的最大字节数（TEMP_READ_BUFFER_LENGTH - currentTail）
-            ​​返回值​​:
-            成功时返回实际读取的字节数（currentReadCount）
-            返回0表示到达文件末尾（对串口通常意味着连接断开）
-            返回-1表示出错，错误代码在 errno中
-            */
         //    currentReadCount=printReceivedDataWithFrequency(motorFd);
             currentReadCount = read(motorFd, read_buffer,LEN_MAX);
             if (currentReadCount > 0) {
@@ -248,16 +237,23 @@ namespace ambot_driver_ns{
                 // 协议处理（自动包含帧格式打印）
             protocol->processFrame(read_buffer,currentReadCount); 
             } 
-            // for (ssize_t i = 0; i < currentReadCount; ++i) {
-            //     std::cout << std::hex << std::setw(2) << std::setfill('0') 
-            //             << static_cast<int>(read_buffer[i]) << " ";
-            // }
-             //protocol->processFrame(read_buffer,currentReadCount);      
-}
+        }
         
     }
 
+    void AmbotDriverCLASS::ProccessAllMotorStateFromMCU(void){
+       for(;;)
+       {
+            usleep(200000);
+           if (threadStop)
+            {
+                printf("receive data thread exit!!\n");
+                pthread_exit(NULL);
+            }
+            protocol->data_consumer();
+       }
 
+    }
     // /**  
     // *   @brief      new thread to update motor feedback data
     //     Parameters:
@@ -270,6 +266,12 @@ namespace ambot_driver_ns{
         ptr->getAllMotorStateFromMCU();
         pthread_exit(0);
     }
+    void* AmbotDriverCLASS::newProccessMotorThread(void* arg)
+    {
+        AmbotDriverCLASS* ptr = (AmbotDriverCLASS*) arg;
+        ptr->ProccessAllMotorStateFromMCU();
+        pthread_exit(0);
+    }
 
     // /**  
     // *   @brief      create a receive data analysis thread
@@ -280,6 +282,8 @@ namespace ambot_driver_ns{
     void AmbotDriverCLASS::createReceiveThread(void)
     {
         if(pthread_create(&motorTid, NULL, newReadMotorThread, (void *)this) != 0)
+            perror("Create read mcu data thread fail!\n");
+        if(pthread_create(&sensorTid, NULL, newProccessMotorThread, (void *)this) != 0)
             perror("Create read mcu data thread fail!\n");
     }
 

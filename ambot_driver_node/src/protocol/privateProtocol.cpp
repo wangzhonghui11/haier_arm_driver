@@ -241,8 +241,9 @@ namespace ambot_driver_ns
                         break;
                         
                     case ID_JAW_MOTOR_UPLOAD:
+                        type = DeviceType::JAW_MOTOR;
                         store_length = comm_frame_store(statusframGroup[ID_JAW_MOTOR_STORE], &data[i]);
-                      arm_queue.push(type, statusframGroup[ID_JAW_MOTOR_STORE]->databuf,store_length-1);
+                         arm_queue.push(type, statusframGroup[ID_JAW_MOTOR_STORE]->databuf,store_length-1);
                         #ifdef DEBUG_MODE
                         statusframGroup[ID_JAW_MOTOR_STORE]->print();                      
                         #endif   
@@ -259,6 +260,24 @@ namespace ambot_driver_ns
         
         return result;
     }
+
+        void  PrivateProtocolCLASS::data_consumer() {
+            DeviceType type;
+            std::vector<uint8_t> data;
+            if (arm_queue.pop(type,data, 10ms)) {
+                switch (type) {
+                    case DeviceType::MEC_ARM:
+                        std::cout<<"MEC_ARM"<<std::endl;
+                        break;
+                    case DeviceType::LIFTS:
+                        std::cout<<"LIFTS"<<std::endl;
+                        break;
+                    case DeviceType::JAW_MOTOR:
+                        std::cout<<"JAW_MOTOR"<<std::endl;
+                        break;
+                }
+            }
+        }
     /**  
     *   @brief      create get ID protocol frame
         Parameters:
@@ -272,10 +291,9 @@ namespace ambot_driver_ns
          uint16_t data_length = statusframGroup->length - 1;  // data_length=store_length-事件控制码长度(1byte)
         
          statusframGroup->CRC_H = databuf[6 + data_length + 0];
-         statusframGroup->CRC_L = databuf[6 + data_length + 1]; 
-        std::cout <<std::hex << (int)databuf[6]<<std::endl;   
-        std::cout << "CRC_H"<<std::hex << (int)databuf[6 + data_length + 0]<<std::endl;
-        std::cout << "CRC_L"<<std::hex << (int)databuf[6 + data_length + 1]<<std::endl;
+         statusframGroup->CRC_L = databuf[6 + data_length + 1];  
+        // std::cout << "CRC_H"<<std::hex << (int)databuf[6 + data_length + 0]<<std::endl;
+        // std::cout << "CRC_L"<<std::hex << (int)databuf[6 + data_length + 1]<<std::endl;
         uint16_t crc_rslt =  usMBCRC16(const_cast<uint8_t*>(&databuf[5]), (data_length + 1));
         
         if(((statusframGroup->CRC_H << 8) | (statusframGroup->CRC_L)) == crc_rslt)

@@ -107,5 +107,5 @@ bool Robot::run(void)
     */
 void Robot::setThreadRunFlag(void)
 {
-    // robotDriver->threadStop = true;
+    robotDriver->threadStop = true;
 }

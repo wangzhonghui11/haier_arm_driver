@@ -97,7 +97,9 @@ namespace ambot_driver_ns{
          static void* newReadMotorThread(void* arg);
         // static void* newReadSensorThread(void* arg);
          void createReceiveThread(void);
+          static void* newProccessMotorThread(void* arg);
         ssize_t printReceivedDataWithFrequency(int motorFd) ;
+        void ProccessAllMotorStateFromMCU(void);
         // bool checkAllMotorException(void);
         // void updateJointCmd(const ambot_msg::AmbotCommand& in);
         // void updateWheelCmd(const std::vector<float> &in);

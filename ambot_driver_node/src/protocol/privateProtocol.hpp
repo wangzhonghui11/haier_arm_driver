@@ -27,7 +27,8 @@ namespace ambot_driver_ns
         PrivateProtocolCLASS(/* args */);
         ~PrivateProtocolCLASS();
         uint8_t processFrame(const uint8_t* data, uint16_t length);
-        uint8_t comm_frame_store(CommFrame* statusframGroup, const uint8_t* databuf); 
+        uint8_t comm_frame_store(CommFrame* statusframGroup, const uint8_t* databuf);
+        void  data_consumer(); 
     };
 
     /**  
