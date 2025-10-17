@@ -10,12 +10,11 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/bool.hpp"
 #include "std_msgs/msg/float32_multi_array.hpp"
-// #include "nav_msgs/msg/odometry.hpp"
-// #include "tf2_ros/transform_broadcaster.h"
-// #include "ambot_msg/msg/ambot_state.hpp"
-// #include "ambot_msg/msg/ambot_command.hpp"
-// #include "sensor_msgs/msg/imu.hpp"
-// #include "ambot_msg/msg/joint_state.hpp"
+#include "bimax_msgs/msg/motor_command.hpp"
+#include "bimax_msgs/msg/motor_state.hpp"
+#include "bimax_msgs/msg/robot_command.hpp"
+#include "bimax_msgs/msg/robot_state.hpp"
+#include "sensor_msgs/msg/joint_state.hpp"
 #include "ambotDriver.hpp"
 #include <cassert>
 // #include "privateProtocol.hpp"
@@ -43,7 +42,7 @@ namespace ambot_driver_ns
 
         /* open api for output command */
         // void getWheelMotorCommand(std::vector<float> &out);
-        // void getJointMotorCommand(ambot_msg::msg::AmbotCommand& data);
+        bool getJointMotorCommand(bimax_msgs::msg::RobotCommand& msg);
         // void robotFbValuePub(const ambot_msg::msg::AmbotState& data);
         
         /* other open function */
@@ -53,12 +52,14 @@ namespace ambot_driver_ns
         // bool getSingleServerParameter(std::string paramName, int& getData);
         // rclcpp::Node::SharedPtr getHandle();
         // void topicFrequencyWarning(void);
-
+        void commandCallback(const bimax_msgs::msg::RobotCommand::SharedPtr msg) ;
     private:
         /* public topic */
         // rclcpp::Publisher<ambot_msg::msg::AmbotState>::SharedPtr sensorValuePub;
         rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr terminateValuePub;
-
+        std::queue<bimax_msgs::msg::RobotCommand> command_queue_;
+        std::mutex queue_mutex_;
+        std::condition_variable queue_cv_;
         // /* subscribe topic */
         // rclcpp::Subscription<ambot_msg::msg::AmbotCommand>::SharedPtr commandValueSub;
         // rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr wheelCmdValueSub;
@@ -80,7 +81,9 @@ namespace ambot_driver_ns
 
         // /* other private variables */
          std::string robot_mkey;
-
+        rclcpp::Subscription<bimax_msgs::msg::RobotCommand>::SharedPtr cmd_sub_;
+        rclcpp::Publisher<bimax_msgs::msg::RobotState>::SharedPtr state_pub_;
+        bimax_msgs::msg::RobotCommand CommandValues;
         // /* timer for periodic operations */
         // rclcpp::TimerBase::SharedPtr timer_;
 

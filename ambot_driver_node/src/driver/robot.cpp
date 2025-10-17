@@ -73,29 +73,31 @@ void Robot::runEnd(void)
     */
 bool Robot::run(void)
 {
-    // if(rclcpp::ok())
-    // {
-    //     // if(ros->terminate)
-    //     // {
-    //     //     ros->setTerminateValue();
-    //     //     return false;                   //if return false, program will end, then will go to deconstruct function
-    //     // }
-    //     ros->robotFbValuePub(robotDriver->rosData);
-    //     ros->getJointMotorCommand(ambotCommand);
-
-    //     // if (ros->robotFeatures.robotType  == robotDriver->robotType.at(ambot_W1))
-    //     //     ros->getWheelMotorCommand(wheelVelCmd);
-    //     if(!robotDriver->threadStop)
-    //     {
-    //         robotDriver->setMotorLocomotionCommand(ambotCommand, wheelVelCmd);
-    //     }else
-    //     {
-    //         ros->setTerminateValue();
-    //     }
-    //     ros->rosSleep();
-    //     return true; 
-    // }else
-         return false; 
+     if(rclcpp::ok())
+    {
+        // if(ros->terminate)
+        // {
+        //     ros->setTerminateValue();
+        //     return false;                   //if return false, program will end, then will go to deconstruct function
+        // }
+        // ros->robotFbValuePub(robotDriver->rosData);
+        if(ros->getJointMotorCommand(CommandValues))
+        {
+            // robotDriver->setMotorLocomotionCommand(CommandValues);
+        }
+        // if (ros->robotFeatures.robotType  == robotDriver->robotType.at(ambot_W1))
+        //     ros->getWheelMotorCommand(wheelVelCmd);
+         if(!robotDriver->threadStop)
+        // {
+        //     robotDriver->setMotorLocomotionCommand(ambotCommand, wheelVelCmd);
+        // }else
+        // {
+        //     ros->setTerminateValue();
+        // }
+        ros->rosSleep();
+        return true; 
+    }else
+        return false; 
 
 }
 

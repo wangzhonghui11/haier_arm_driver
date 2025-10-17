@@ -7,6 +7,8 @@ project(ambot_driver_node)
 # 启用新版头文件安装行为（兼容所有ROS2版本）
 #option(USE_SCOPED_HEADER_INSTALL_DIR "Use scoped header install directory" ON)
 find_package(ament_cmake_auto REQUIRED)
+find_package(bimax_msgs REQUIRED)  # 确保 bimax_msgs 已适配 ROS2
+
 ament_auto_find_build_dependencies()
 
 # 设置编译选项
@@ -27,7 +29,6 @@ endif()
 ##############################################################################
 # 构建配置
 ##############################################################################
-
 # 设置源文件目录
 include_directories(
   include
@@ -36,7 +37,6 @@ include_directories(
   src/ros
   src/protocol
 )
-
 # 自动添加库和可执行文件
 ament_auto_add_library(ambot_lib STATIC
   src/driver/ambotDriver.cpp
@@ -45,11 +45,9 @@ ament_auto_add_library(ambot_lib STATIC
   src/protocol/crcModbus.cpp
   src/ros/ambotRosClass.cpp
 )
-
 ament_auto_add_executable(ambot_node
   main.cpp
 )
-
 # 链接库
 target_link_libraries(ambot_node
   ambot_lib

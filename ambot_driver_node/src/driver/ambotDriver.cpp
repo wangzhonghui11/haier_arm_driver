@@ -234,8 +234,9 @@ namespace ambot_driver_ns{
     }
 
     void AmbotDriverCLASS::ProccessAllMotorStateFromMCU(void){
-       for(;;)
+        for(;;)
        {
+           
             usleep(200000);
            if (threadStop)
             {
@@ -267,13 +268,57 @@ namespace ambot_driver_ns{
             perror("Create read mcu data thread fail!\n");
     }
 
-    bool AmbotDriverCLASS::setMotorLocomotionCommand()
+    bool AmbotDriverCLASS::setMotorLocomotionCommand(CommFrame* frame)
     {
-        static protocolOutputBuffer_TP sendBuff;
+        protocolOutputBuffer_TP sendBuff;
         //update all motor command data
-        sendBuff.length=protocol->comm_frame_store(cmdframGroup[0],sendBuff.buffer);
-        if(sendBuff.length != txPacket(sendBuff))
+        uint8_t led[2]={0x2,0x2};
+        cmdframLedSet.databuf=led;
+        uint8_t cmdId=cmdframLedSet.cmd_ID;
+        //sendBuff.length = 10;
+        //uint8_t temp[] = {0xF0, 0xF0, 0x00, 0x01, 0x03, 0x08, 0x00, 0x00, 0x02, 0xf0};
+        //memcpy(sendBuff.buffer, temp, sendBuff.length);
+        switch(cmdId)
+        {
+            case ID_CMD_TIME_SET://设置MCU时间
+                sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STORE_NUM_TIME_SET],sendBuff.buffer);	
+                    break;
+
+            case ID_CMD_MOP_SET://拖布电机控制
+                sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STORE_NUM_MOP_SET],sendBuff.buffer);	
+                    break; 
+
+            case ID_CMD_JAW_SET://夹爪电机控制
+                sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STORE_NUM_JAW_SET],sendBuff.buffer);	
+                    break;
+
+            case ID_CMD_CATCHER_SET://吸尘电机控制
+                sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STORE_NUM_CATCHER_SET],sendBuff.buffer);					 
+                    break;
+                    
+            case ID_CMD_MAGNET_SET: //磁铁控制
+                sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STORE_NUM_MAGNET_SET],sendBuff.buffer);			
+                    break;
+            
+            case ID_CMD_MECARM_SET://机械臂控制	
+                sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STORE_NUM_MECARM_SET],sendBuff.buffer);			
+                    break;         
+            case ID_CMD_LIFTS_SET://升降电机控制
+                sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STORE_NUM_LIFTS_SET],sendBuff.buffer);			
+                    break; 
+            case ID_CMD_LED_SET: //LED灯控制
+                 sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STROE_NUM_LED_SET],sendBuff.buffer);			 
+                    break;
+            case ID_CMD_HEARTBEAT:
+                    break;			
+            }
+        if(sendBuff.length != txPacket(sendBuff)){
+            std::cout<<"failed to send"<<std::endl;
             return false;
+        }
+        else{
+        std::cout<<"saccess to send"<<std::endl;
+        }
         // don't wait for set command response now 
         return true;
     }

@@ -77,8 +77,8 @@ namespace ambot_driver_ns
 
         // 导航发送给MCU的帧结构初始化
         CommFrame cmdframTimeSet = {
-            .head_H = 0,
-            .head_L = 0,
+            .head_H =FRAME_HEAD_H ,
+            .head_L = FRAME_HEAD_L,
             .frame_ID_H = 0,
             .frame_ID_L = 0,
             .length = 1 + DATA_LEGTH_TIME_SET,
@@ -89,8 +89,8 @@ namespace ambot_driver_ns
         };
 
         CommFrame cmdframMopSet = {
-            .head_H = 0,
-            .head_L = 0,
+            .head_H =FRAME_HEAD_H ,
+            .head_L = FRAME_HEAD_L,
             .frame_ID_H = 0,
             .frame_ID_L = 0,
             .length = 1 + DATA_LEGTH_MOP_SET,
@@ -101,8 +101,8 @@ namespace ambot_driver_ns
         };
 
         CommFrame cmdframJawSet = {
-            .head_H = 0,
-            .head_L = 0,
+            .head_H =FRAME_HEAD_H ,
+            .head_L = FRAME_HEAD_L,
             .frame_ID_H = 0,
             .frame_ID_L = 0,
             .length = 1 + DATA_LEGTH_JAW_SET,
@@ -113,8 +113,8 @@ namespace ambot_driver_ns
         };
 
         CommFrame cmdframCatcherSet = {
-            .head_H = 0,
-            .head_L = 0,
+            .head_H =FRAME_HEAD_H ,
+            .head_L = FRAME_HEAD_L,
             .frame_ID_H = 0,
             .frame_ID_L = 0,
             .length = 1 + DATA_LEGTH_CATCHER_SET,
@@ -125,8 +125,8 @@ namespace ambot_driver_ns
         };
 
         CommFrame cmdframMagnetet = {
-            .head_H = 0,
-            .head_L = 0,
+            .head_H =FRAME_HEAD_H ,
+            .head_L = FRAME_HEAD_L,
             .frame_ID_H = 0,
             .frame_ID_L = 0,
             .length = 1 + DATA_LEGTH_MAGNET_SET,
@@ -137,8 +137,8 @@ namespace ambot_driver_ns
         };
 
         CommFrame cmdframMecArmSet = {
-            .head_H = 0,
-            .head_L = 0,
+            .head_H =FRAME_HEAD_H ,
+            .head_L = FRAME_HEAD_L,
             .frame_ID_H = 0,
             .frame_ID_L = 0,
             .length = 1 + DATA_LEGTH_MECARM_SET,
@@ -149,8 +149,8 @@ namespace ambot_driver_ns
         };
 
         CommFrame cmdframLiftsSet = {
-            .head_H = 0,
-            .head_L = 0,
+            .head_H =FRAME_HEAD_H ,
+            .head_L = FRAME_HEAD_L,
             .frame_ID_H = 0,
             .frame_ID_L = 0,
             .length = 1 + DATA_LEGTH_LIFTS_SET,
@@ -161,8 +161,8 @@ namespace ambot_driver_ns
         };
 
         CommFrame cmdframLedSet = {
-            .head_H = 0,
-            .head_L = 0,
+            .head_H =FRAME_HEAD_H ,
+            .head_L = FRAME_HEAD_L,
             .frame_ID_H = 0,
             .frame_ID_L = 0,
             .length = 1 + DATA_LEGTH_LED_SET,
@@ -327,7 +327,8 @@ namespace ambot_driver_ns
         static std::atomic<uint16_t> upload_cnt{0};
         const uint16_t frame_id = ++upload_cnt;
         const uint16_t data_length = frame->length - 1;
-
+        frame->head_H = static_cast<uint8_t>(0xF0);
+        frame->head_L = static_cast<uint8_t>(0XF0);
         // 设置Frame ID
         frame->frame_ID_H = static_cast<uint8_t>((frame_id >> 8) & 0xFF);
         frame->frame_ID_L = static_cast<uint8_t>(frame_id & 0xFF);

@@ -27,7 +27,7 @@
   <depend>control_msgs</depend> -->
   
   <!-- 自定义消息依赖 -->
-  <!-- <depend>ambot_msg</depend> -->
+  <depend>bimax_msgs</depend>      <!-- 自定义消息（需确保已适配 ROS2） -->
 
   <!-- 测试依赖 -->
   <test_depend>ament_lint_auto</test_depend>

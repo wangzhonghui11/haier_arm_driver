@@ -69,7 +69,7 @@ namespace ambot_driver_ns{
         size_t processBuffer(const uint8_t* data, size_t length) ;
 
         ssize_t txPacket(protocolOutputBuffer_TP &out);
-        bool setMotorLocomotionCommand();
+        bool setMotorLocomotionCommand(CommFrame* frame) ;       
         void getAllMotorStateFromMCU(void);
         static void* newReadMotorThread(void* arg);
         void createReceiveThread(void);
