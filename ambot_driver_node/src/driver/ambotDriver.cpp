@@ -22,7 +22,7 @@ namespace ambot_driver_ns{
         motorFd = open("/dev/ttyUSB0", O_RDWR | O_NOCTTY );
         if (motorFd == -1) {
             perror("Error opening motor serial port");
-            exit(0);
+            // exit(0);
         }
         // 2.init serial config file
         struct termios SerialPortSettings;
@@ -247,7 +247,16 @@ namespace ambot_driver_ns{
        }
 
     }
+    void  AmbotDriverCLASS::floatToUint32(float input, uint8_t* des) {
+        uint32_t bits;
+        memcpy(&bits, &input, sizeof(float));
 
+        // 大端序存储
+        des[0] = (bits >> 24) & 0xFF;
+        des[1] = (bits >> 16) & 0xFF;
+        des[2] = (bits >> 8)  & 0xFF;
+        des[3] = bits & 0xFF;
+    }
     void* AmbotDriverCLASS::newReadMotorThread(void* arg)
     {
         AmbotDriverCLASS* ptr = (AmbotDriverCLASS*) arg;
@@ -267,7 +276,30 @@ namespace ambot_driver_ns{
         if(pthread_create(&sensorTid, NULL, newProccessMotorThread, (void *)this) != 0)
             perror("Create read mcu data thread fail!\n");
     }
+    bool AmbotDriverCLASS::LifterMotorprocess(bimax_msgs::msg::RobotCommand& cmd)
+    {
+        uint8_t des_left[4];
+        uint8_t des_right[4];
+        floatToUint32(cmd.motor_command[0].q, des_left);  // 填充 des_left
+        floatToUint32(cmd.motor_command[4].q, des_right); // 填充 des_right
+        uint8_t databuf[8];
+        memcpy(databuf, des_left, 4);      // 前 4 字节 = des_left
+        memcpy(databuf + 4, des_right, 4); // 后 4 字节 = des_right
+        // std::cout << "databuf: ";
+        // for (int i = 0; i < 8; i++) {
+        //     std::cout << "0x" << std::hex << std::setw(2) << std::setfill('0') 
+        //             << static_cast<int>(databuf[i]) << " ";
+        // }
+        // std::cout << std::endl;
+        cmdframLiftsSet.databuf=databuf;
+        return setMotorLocomotionCommand(cmdframGroup[STORE_NUM_LIFTS_SET]);
 
+    }
+    bool AmbotDriverCLASS::CommandFrameProcess(bimax_msgs::msg::RobotCommand& cmd)
+    {
+        LifterMotorprocess(cmd);
+        return true;
+    }
     bool AmbotDriverCLASS::setMotorLocomotionCommand(CommFrame* frame)
     {
         protocolOutputBuffer_TP sendBuff;

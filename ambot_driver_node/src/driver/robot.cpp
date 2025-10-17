@@ -83,7 +83,8 @@ bool Robot::run(void)
         // ros->robotFbValuePub(robotDriver->rosData);
         if(ros->getJointMotorCommand(CommandValues))
         {
-            // robotDriver->setMotorLocomotionCommand(CommandValues);
+         std::cout<<"joint_q="<<CommandValues.motor_command[0].q<<std::endl;
+              robotDriver->CommandFrameProcess(CommandValues);
         }
         // if (ros->robotFeatures.robotType  == robotDriver->robotType.at(ambot_W1))
         //     ros->getWheelMotorCommand(wheelVelCmd);

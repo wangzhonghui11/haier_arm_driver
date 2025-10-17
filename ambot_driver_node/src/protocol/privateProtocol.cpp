@@ -143,7 +143,7 @@ namespace ambot_driver_ns
             .frame_ID_L = 0,
             .length = 1 + DATA_LEGTH_MECARM_SET,
             .cmd_ID =  ID_CMD_MECARM_SET,
-            .databuf = &dataMecArmSet.data,
+            .databuf = dataMecArmSet.data,
             .CRC_H = 0,
             .CRC_L = 0
         };
@@ -155,7 +155,7 @@ namespace ambot_driver_ns
             .frame_ID_L = 0,
             .length = 1 + DATA_LEGTH_LIFTS_SET,
             .cmd_ID =  ID_CMD_LIFTS_SET,
-            .databuf = &dataLiftsSet.data,
+            .databuf = dataLiftsSet.data,
             .CRC_H = 0,
             .CRC_L = 0
         };

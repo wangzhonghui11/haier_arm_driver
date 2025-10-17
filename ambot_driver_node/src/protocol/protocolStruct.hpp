@@ -64,8 +64,8 @@ namespace ambot_driver_ns
     #define DATA_LEGTH_JAW_SET         4
     #define DATA_LEGTH_CATCHER_SET     4
     #define DATA_LEGTH_MAGNET_SET      2   // 
-    #define DATA_LEGTH_MECARM_SET      1
-    #define DATA_LEGTH_LIFTS_SET       1
+    #define DATA_LEGTH_MECARM_SET      8
+    #define DATA_LEGTH_LIFTS_SET       8
     #define DATA_LEGTH_LED_SET         2
     #define DATA_LEGTH_HEARTBEAT       0
 
@@ -166,9 +166,10 @@ namespace ambot_driver_ns
         struct MecArmSet {
             union {
                 struct {
-                    uint8_t null;  // 未使用
+                    uint32_t left_pos;
+                    uint32_t right_pos;  // 预留
                 } real;
-                uint8_t data;
+                uint8_t data[8];
             };
         };
 
@@ -176,9 +177,10 @@ namespace ambot_driver_ns
         struct LiftsSet {
             union {
                 struct {
-                    uint8_t null;  // 未使用
+                    uint32_t left_pos;
+                    uint32_t right_pos;  // 预留
                 } real;
-                uint8_t data;
+                uint8_t data[8];
             };
         };
 

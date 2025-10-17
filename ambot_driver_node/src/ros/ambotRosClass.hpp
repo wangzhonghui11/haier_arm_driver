@@ -10,11 +10,6 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/bool.hpp"
 #include "std_msgs/msg/float32_multi_array.hpp"
-#include "bimax_msgs/msg/motor_command.hpp"
-#include "bimax_msgs/msg/motor_state.hpp"
-#include "bimax_msgs/msg/robot_command.hpp"
-#include "bimax_msgs/msg/robot_state.hpp"
-#include "sensor_msgs/msg/joint_state.hpp"
 #include "ambotDriver.hpp"
 #include <cassert>
 // #include "privateProtocol.hpp"

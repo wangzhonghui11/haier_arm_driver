@@ -24,6 +24,11 @@
 #include "protocolStruct.hpp"
 #include "privateProtocol.hpp"
 #include <chrono>
+#include "bimax_msgs/msg/motor_command.hpp"
+#include "bimax_msgs/msg/motor_state.hpp"
+#include "bimax_msgs/msg/robot_command.hpp"
+#include "bimax_msgs/msg/robot_state.hpp"
+#include "sensor_msgs/msg/joint_state.hpp"
 namespace ambot_driver_ns{
      #define LEN_MAX 4096
     typedef struct 
@@ -59,15 +64,16 @@ namespace ambot_driver_ns{
         ~AmbotDriverCLASS();
         /* open function */
         bool initial(void);
-
+        bool CommandFrameProcess(bimax_msgs::msg::RobotCommand& cmd);
     private:
+        void  floatToUint32(float input, uint8_t* des);
         PrivateProtocolCLASS *protocol;         //communication protocol instance
         const RobotDriver_TP robotParams;       //the const input robot params
         void printByteStream(const uint8_t* data, ssize_t count);
         int motorFd, sensorFd;                  //low driver motor file ID and sensor ID
         pthread_t motorTid, sensorTid;          //motor read feedback thread ID and sensor read thread ID
         size_t processBuffer(const uint8_t* data, size_t length) ;
-
+        bool LifterMotorprocess(bimax_msgs::msg::RobotCommand& cmd);
         ssize_t txPacket(protocolOutputBuffer_TP &out);
         bool setMotorLocomotionCommand(CommFrame* frame) ;       
         void getAllMotorStateFromMCU(void);
