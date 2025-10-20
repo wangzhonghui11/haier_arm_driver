@@ -96,8 +96,11 @@ bool Robot::run(void)
             bool yellow_changed = ros->get_yellow_state(yellow_led);
             bool left_magnet_changed =ros->get_left_magnet_state(left_magnet_state);
             bool right_magnet_changed =ros->get_right_magnet_state(right_magnet_state);           
-
-           if(left_magnet_changed||right_magnet_changed)
+            bool catcher_gear_changed =ros->get_catcher_gear_state(catcher_gear);
+            bool catcher_state_changed =ros->get_catcher_state(catcher_state);  
+            bool mop_motor_pwm_changed =ros->get_mop_motor_pwm_state(mop_motor_pwm);
+            bool mop_state_changed =ros->get_mop_state(mop_state);    
+            if(left_magnet_changed||right_magnet_changed)
            {
                 robotDriver->CommandServeMagnetProcess(left_magnet_state, right_magnet_state);
             }
@@ -105,6 +108,16 @@ bool Robot::run(void)
             {
 
                 robotDriver->CommandServeLedProcess(rad_led, yellow_led);
+            }
+            if(catcher_gear_changed||catcher_state_changed)
+            {
+
+                robotDriver->CommandServeCatcherProcess(catcher_gear, catcher_state);
+            }
+            if(mop_motor_pwm_changed||mop_state_changed)
+            {
+
+                robotDriver->CommandServeMopProcess(mop_motor_pwm, mop_state);
             }
             last_tools_time = now;  // 更新时间戳
         }

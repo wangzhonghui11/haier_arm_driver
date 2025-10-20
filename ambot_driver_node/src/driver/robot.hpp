@@ -40,7 +40,11 @@ class Robot
         uint8_t rad_led;
         uint8_t yellow_led;  
         uint8_t left_magnet_state;
-        uint8_t right_magnet_state;         
+        uint8_t right_magnet_state;   
+        uint8_t catcher_gear;
+        uint8_t catcher_state; 
+        uint16_t mop_motor_pwm;
+        uint8_t mop_state;           
     public:
         Robot(int argc, char** argv);
         ~Robot();

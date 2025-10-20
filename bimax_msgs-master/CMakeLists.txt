@@ -42,6 +42,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "action/BimaxFunction.action"
   "srv/LedControl.srv"
   "srv/MagnetControl.srv" 
+  "srv/CatcherControl.srv" 
+  "srv/MopControl.srv"
   DEPENDENCIES
     std_msgs
     sensor_msgs

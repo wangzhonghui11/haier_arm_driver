@@ -91,6 +91,10 @@ namespace ambot_driver_ns
         cmd_sub_ = create_subscription<bimax_msgs::msg::RobotCommand>("/bimaxArmCommandValues", command_qos,
         std::bind(&RosClass::commandCallback, this, std::placeholders::_1));
         // 初始化服务
+        service_mop = create_service<bimax_msgs::srv::MopControl>("mop_control",std::bind(&RosClass::mop_handle_request, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(get_logger(), "拖布控制服务已启动");
+        service_catcher = create_service<bimax_msgs::srv::CatcherControl>("catcher_control",std::bind(&RosClass::catcher_handle_request, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(get_logger(), "吸尘控制服务已启动");
         service_led = create_service<bimax_msgs::srv::LedControl>("led_control",std::bind(&RosClass::led_handle_request, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(get_logger(), "LED控制服务已启动");
         service_magnet = create_service<bimax_msgs::srv::MagnetControl>("magnet_control",std::bind(&RosClass::magnet_handle_request, this, std::placeholders::_1, std::placeholders::_2));
@@ -106,7 +110,71 @@ namespace ambot_driver_ns
         command_queue_.push(*msg);
         queue_cv_.notify_one();  // 通知有新的命令到达
     }
+    void RosClass::mop_handle_request(
+        const std::shared_ptr<bimax_msgs::srv::MopControl::Request> request,
+        std::shared_ptr<bimax_msgs::srv::MopControl::Response> response)
+    {
+        // 验证输入状态是否合法
+        if (request->mop_motor_pwm > 1000 || request->mop_state > 1) {
+            response->success = false;
+            response->message = "错误：状态值必须是0、1";
+            return;
+        }
+        mop_motor_pwm_state_ = request->mop_motor_pwm;
+        mop_state_ = request->mop_state;
+        response->success = true;
+        response->message = "操作成功";
+    }
+   bool  RosClass::get_mop_motor_pwm_state(uint16_t  &mop_motor_pwm_state) { 
+            mop_motor_pwm_state=mop_motor_pwm_state_;
+        if(mop_motor_pwm_state != last_mop_motor_pwm_state_){
+            last_mop_motor_pwm_state_ = mop_motor_pwm_state;          
+            return true;
+        }
+            return false;
+    }
 
+    bool  RosClass::get_mop_state(uint8_t  &mop_state) { 
+            mop_state=mop_state_;
+        if(mop_state != last_mop_state_){
+            last_mop_state_ = mop_state;          
+            return true;
+        }
+            return false;
+    }
+
+    void RosClass::catcher_handle_request(
+        const std::shared_ptr<bimax_msgs::srv::CatcherControl::Request> request,
+        std::shared_ptr<bimax_msgs::srv::CatcherControl::Response> response)
+    {
+        // 验证输入状态是否合法
+        if (request->catcher_gear > 2 || request->catcher_state > 1) {
+            response->success = false;
+            response->message = "错误：状态值必须是0、1";
+            return;
+        }
+        catcher_gear_state_ = request->catcher_gear;
+        catcher_state_ = request->catcher_state;
+        response->success = true;
+        response->message = "操作成功";
+    }
+    bool  RosClass::get_catcher_gear_state(uint8_t  &catcher_gear_state) { 
+            catcher_gear_state=catcher_gear_state_;
+        if(catcher_gear_state != last_catcher_gear_state_){
+            last_catcher_gear_state_ = catcher_gear_state;          
+            return true;
+        }
+            return false;
+    }
+
+    bool  RosClass::get_catcher_state(uint8_t  &catcher_state) { 
+            catcher_state=catcher_state_;
+        if(catcher_state != last_catcher_state_){
+            last_catcher_state_ = catcher_state;          
+            return true;
+        }
+            return false;
+    }
     void RosClass::magnet_handle_request(
         const std::shared_ptr<bimax_msgs::srv::MagnetControl::Request> request,
         std::shared_ptr<bimax_msgs::srv::MagnetControl::Response> response)

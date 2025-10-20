@@ -52,6 +52,10 @@ namespace ambot_driver_ns
         bool get_yellow_state(uint8_t  &yellow_state_);  
         bool get_right_magnet_state(uint8_t  &right_magnet_state) ;
         bool get_left_magnet_state(uint8_t  &left_magnet_state) ;
+        bool get_catcher_gear_state(uint8_t  &catcher_gear_state);
+        bool get_catcher_state(uint8_t  &catcher_state);
+        bool get_mop_state(uint8_t  &mop_state) ;
+        bool get_mop_motor_pwm_state(uint16_t  &mop_motor_pwm_state);
     private:
         /* public topic */
         // rclcpp::Publisher<ambot_msg::msg::AmbotState>::SharedPtr sensorValuePub;
@@ -70,6 +74,14 @@ namespace ambot_driver_ns
         // /* receive command buffer */
         // ambot_msg::msg::AmbotCommand commandValues;
         // std::vector<float> wheelCmd;
+        uint8_t last_mop_state_;
+        uint16_t last_mop_motor_pwm_state_;
+        uint8_t mop_state_;
+        uint16_t mop_motor_pwm_state_;
+        uint8_t last_catcher_gear_state_;   // 新增：记录上一次状态
+        uint8_t last_catcher_state_;  // 新增
+        uint8_t catcher_gear_state_;   
+        uint8_t catcher_state_;  // 新增
         uint8_t last_green_state_;   // 新增：记录上一次状态
         uint8_t last_yellow_state_;  // 新增
         uint8_t green_state_;   // 存储绿灯状态
@@ -82,8 +94,10 @@ namespace ambot_driver_ns
         // /* robot ros parameter server */
         std::map<string, float> robot_params;
         std::map<string, string> robot_devices;
+        rclcpp::Service<bimax_msgs::srv::MopControl>::SharedPtr service_mop;
         rclcpp::Service<bimax_msgs::srv::LedControl>::SharedPtr service_led;
         rclcpp::Service<bimax_msgs::srv::MagnetControl>::SharedPtr service_magnet;
+        rclcpp::Service<bimax_msgs::srv::CatcherControl>::SharedPtr service_catcher;
         // /* other private variables */
          std::string robot_mkey;
         rclcpp::Subscription<bimax_msgs::msg::RobotCommand>::SharedPtr cmd_sub_;
@@ -91,6 +105,8 @@ namespace ambot_driver_ns
         bimax_msgs::msg::RobotCommand CommandValues;
         void led_handle_request(const std::shared_ptr<bimax_msgs::srv::LedControl::Request> request,std::shared_ptr<bimax_msgs::srv::LedControl::Response> response);
         void magnet_handle_request(const std::shared_ptr<bimax_msgs::srv::MagnetControl::Request> request,std::shared_ptr<bimax_msgs::srv::MagnetControl::Response> response);
+        void catcher_handle_request( const std::shared_ptr<bimax_msgs::srv::CatcherControl::Request> request, std::shared_ptr<bimax_msgs::srv::CatcherControl::Response> response);
+        void mop_handle_request(const std::shared_ptr<bimax_msgs::srv::MopControl::Request> request,std::shared_ptr<bimax_msgs::srv::MopControl::Response> response);
     };
 }
 

@@ -328,6 +328,20 @@ namespace ambot_driver_ns{
         setMotorLocomotionCommand(cmdframGroup[STROE_NUM_LED_SET]);
         return true;
     }
+    bool AmbotDriverCLASS::CommandServeCatcherProcess(uint8_t catcher_gear,uint8_t catcher_state)
+    {
+        uint8_t catcher[4]={0x00,0x00,catcher_gear,catcher_state};
+        cmdframCatcherSet.databuf=catcher;
+        setMotorLocomotionCommand(cmdframGroup[STORE_NUM_CATCHER_SET]);
+        return true;
+    }
+    bool AmbotDriverCLASS::CommandServeMopProcess(uint16_t mop_motor_pwm,uint8_t mop_state)
+    {
+        uint8_t catcher[3]={(mop_motor_pwm >> 8) & 0xFF,mop_motor_pwm & 0xFF,mop_state};
+        cmdframMopSet.databuf=catcher;
+        setMotorLocomotionCommand(cmdframGroup[STORE_NUM_MOP_SET]);
+        return true;
+    }
     bool AmbotDriverCLASS::CommandServeMagnetProcess(uint8_t left_magnet_state,uint8_t right_magnet_state)
     {
         uint8_t magnet[2]={left_magnet_state,right_magnet_state};
@@ -335,6 +349,7 @@ namespace ambot_driver_ns{
         setMotorLocomotionCommand(cmdframGroup[STORE_NUM_MAGNET_SET]);
         return true;
     }
+
     bool AmbotDriverCLASS::setMotorLocomotionCommand(CommFrame* frame)
     {
         protocolOutputBuffer_TP sendBuff;

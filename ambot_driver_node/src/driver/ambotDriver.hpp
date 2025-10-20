@@ -29,8 +29,10 @@
 #include "bimax_msgs/msg/robot_command.hpp"
 #include "bimax_msgs/msg/robot_state.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
-#include "bimax_msgs/srv/led_control.hpp"  // 替换为你的包名
-#include "bimax_msgs/srv/magnet_control.hpp"  // 替换为你的包名
+#include "bimax_msgs/srv/led_control.hpp"  
+#include "bimax_msgs/srv/magnet_control.hpp"  
+#include "bimax_msgs/srv/catcher_control.hpp"
+#include "bimax_msgs/srv/mop_control.hpp"    
 namespace ambot_driver_ns{
      #define LEN_MAX 4096
     typedef struct 
@@ -69,6 +71,8 @@ namespace ambot_driver_ns{
         bool CommandFrameProcess(bimax_msgs::msg::RobotCommand& cmd);
         bool CommandServeLedProcess(uint8_t green,uint8_t yellow);
         bool CommandServeMagnetProcess(uint8_t green,uint8_t yellow);
+        bool CommandServeCatcherProcess(uint8_t green,uint8_t yellow);
+        bool CommandServeMopProcess(uint16_t mop_motor_pwm,uint8_t mop_state);
     private:
         void  floatToUint32(float input, uint8_t* des);
         PrivateProtocolCLASS *protocol;         //communication protocol instance
