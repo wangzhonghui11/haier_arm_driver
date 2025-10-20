@@ -227,7 +227,7 @@ namespace ambot_driver_ns{
                 #ifdef DEBUG_MODE
                 printByteStream(read_buffer, currentReadCount);
                 #endif
-            // printByteStream(read_buffer, currentReadCount);    
+                printByteStream(read_buffer, currentReadCount);    
                 // 协议处理（自动包含帧格式打印）
              protocol->processFrame(read_buffer,currentReadCount); 
             } 

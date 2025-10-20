@@ -236,6 +236,7 @@ namespace ambot_driver_ns
                          type = DeviceType::LIFTS;
                         store_length = comm_frame_store(statusframGroup[ID_LIFTS_STORE], &data[i]);
                         arm_queue.push(type, statusframGroup[ID_LIFTS_STORE]->databuf,store_length-1);
+                        statusframGroup[ID_LIFTS_STORE]->print();   
                         #ifdef DEBUG_MODE
                         statusframGroup[ID_LIFTS_STORE]->print();                      
                         #endif                        
@@ -268,10 +269,15 @@ namespace ambot_driver_ns
             if (arm_queue.pop(type,data, 10ms)) {
                 switch (type) {
                     case DeviceType::MEC_ARM:
+                        
                         std::cout<<"MEC_ARM"<<std::endl;
                         break;
                     case DeviceType::LIFTS:
-                        std::cout<<"LIFTS"<<std::endl;
+                        std::cout << std::hex << std::setfill('0');  // 设置为16进制，填充0
+                        for (auto it = data.begin(); it != data.end(); ++it) {
+                            std::cout << "0x" << std::setw(2) << static_cast<int>(*it) << " ";
+                        }
+                            std::cout << std::endl;
                         break;
                     case DeviceType::JAW_MOTOR:
                         std::cout<<"JAW_MOTOR"<<std::endl;
@@ -279,6 +285,8 @@ namespace ambot_driver_ns
                 }
             }
         }
+
+
     /**  
     *   @brief      create get ID protocol frame
         Parameters:

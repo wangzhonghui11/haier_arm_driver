@@ -30,7 +30,7 @@ public:
 
     // 入队（强制深拷贝）
     bool push(DeviceType type, const void* data, size_t size, 
-            std::chrono::milliseconds timeout = 50ms) 
+            std::chrono::milliseconds timeout = 20ms) 
     {
         if (size > 1024 * 1024) return false;  // 拒绝超大请求
 
@@ -66,7 +66,7 @@ public:
 
     // 阻塞出队
     bool pop(DeviceType& type, std::vector<uint8_t>& output,
-            std::chrono::milliseconds timeout = 100ms) 
+            std::chrono::milliseconds timeout = 20ms) 
     {
         std::unique_lock<std::mutex> lock(mutex_);
         if (!cv_pop_.wait_for(lock, timeout, [this] { 

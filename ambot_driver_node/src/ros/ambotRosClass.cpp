@@ -226,8 +226,7 @@ namespace ambot_driver_ns
     bool RosClass::get_green_state(uint8_t &current_state) { 
         current_state = green_state_;
         if(current_state != last_green_state_) {
-            RCLCPP_INFO(get_logger(), "绿灯状态变更: %d -> %d", 
-                    last_green_state_, current_state);
+            RCLCPP_INFO(get_logger(), "绿灯状态变更: %d -> %d", last_green_state_, current_state);
             last_green_state_ = current_state;
             return true; // 状态已变化
         }
@@ -237,8 +236,7 @@ namespace ambot_driver_ns
     bool RosClass::get_yellow_state(uint8_t &current_state) {
         current_state = yellow_state_;
         if(current_state != last_yellow_state_) {
-            RCLCPP_INFO(get_logger(), "黄灯状态变更: %d -> %d",
-                    last_yellow_state_, current_state);
+            RCLCPP_INFO(get_logger(), "黄灯状态变更: %d -> %d",last_yellow_state_, current_state);
             last_yellow_state_ = current_state;
             return true;
         }
