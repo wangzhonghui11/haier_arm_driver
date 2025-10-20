@@ -48,6 +48,10 @@ namespace ambot_driver_ns
         // rclcpp::Node::SharedPtr getHandle();
         // void topicFrequencyWarning(void);
         void commandCallback(const bimax_msgs::msg::RobotCommand::SharedPtr msg) ;
+        bool get_green_state(uint8_t  &green_state_) ;
+        bool get_yellow_state(uint8_t  &yellow_state_);  
+        bool get_right_magnet_state(uint8_t  &right_magnet_state) ;
+        bool get_left_magnet_state(uint8_t  &left_magnet_state) ;
     private:
         /* public topic */
         // rclcpp::Publisher<ambot_msg::msg::AmbotState>::SharedPtr sensorValuePub;
@@ -66,26 +70,27 @@ namespace ambot_driver_ns
         // /* receive command buffer */
         // ambot_msg::msg::AmbotCommand commandValues;
         // std::vector<float> wheelCmd;
-
-        // /* sensor and motor feedback data buffer */
-        // ambot_msg::msg::AmbotState ambotState;
+        uint8_t last_green_state_;   // 新增：记录上一次状态
+        uint8_t last_yellow_state_;  // 新增
+        uint8_t green_state_;   // 存储绿灯状态
+        uint8_t yellow_state_; // 存储黄灯状态
+        uint8_t last_left_magnet_state_;   // 新增：记录上一次状态
+        uint8_t last_right_magnet_state_;  // 新增
+        uint8_t left_magnet_state_;   // 存储绿灯状态
+        uint8_t right_magnet_state_; // 存储黄灯状态
         std::string parameter_string_;
         // /* robot ros parameter server */
         std::map<string, float> robot_params;
         std::map<string, string> robot_devices;
-
+        rclcpp::Service<bimax_msgs::srv::LedControl>::SharedPtr service_led;
+        rclcpp::Service<bimax_msgs::srv::MagnetControl>::SharedPtr service_magnet;
         // /* other private variables */
          std::string robot_mkey;
         rclcpp::Subscription<bimax_msgs::msg::RobotCommand>::SharedPtr cmd_sub_;
         rclcpp::Publisher<bimax_msgs::msg::RobotState>::SharedPtr state_pub_;
         bimax_msgs::msg::RobotCommand CommandValues;
-        // /* timer for periodic operations */
-        // rclcpp::TimerBase::SharedPtr timer_;
-
-        // /* subscribe topic callback function */
-        // void commandValueCallback(const ambot_msg::msg::AmbotCommand::SharedPtr array);
-        // void wheelCmdValueCallback(const std_msgs::msg::Float32MultiArray::SharedPtr array);
-        // void terminateValueCallback(const std_msgs::msg::Bool::SharedPtr termNode);
+        void led_handle_request(const std::shared_ptr<bimax_msgs::srv::LedControl::Request> request,std::shared_ptr<bimax_msgs::srv::LedControl::Response> response);
+        void magnet_handle_request(const std::shared_ptr<bimax_msgs::srv::MagnetControl::Request> request,std::shared_ptr<bimax_msgs::srv::MagnetControl::Response> response);
     };
 }
 

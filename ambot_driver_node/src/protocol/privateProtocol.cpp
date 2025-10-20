@@ -332,12 +332,13 @@ namespace ambot_driver_ns
         // 设置Frame ID
         frame->frame_ID_H = static_cast<uint8_t>((frame_id >> 8) & 0xFF);
         frame->frame_ID_L = static_cast<uint8_t>(frame_id & 0xFF);
-
+        // u_int8_t arr[]={0xC8 ,0xCC, 0x4C, 0x3D, 0xC8 ,0xCC, 0x4C, 0x3D};
+        // frame->databuf=arr;
         // 准备CRC计算数据
         uint8_t databuf_temp[256] = {0};
         databuf_temp[0] = frame->cmd_ID;
         for (uint8_t i = 1; i <= data_length; i++) {
-            databuf_temp[i] = frame->databuf[i - 1];
+            databuf_temp[i] = frame->databuf[i-1];
         }
 
         // 计算CRC
@@ -351,6 +352,10 @@ namespace ambot_driver_ns
         memcpy(output_buf + 6 + data_length, &frame->CRC_H, 1);     // CRC高字节
         memcpy(output_buf + 6 + data_length + 1, &frame->CRC_L, 1); // CRC低字节
         size_t total_bytes=6 + data_length + 2;
+        for (size_t i = 0; i < total_bytes; i++) {
+            std::cout << std::hex << std::setw(2) << std::setfill('0') 
+                    << static_cast<int>(output_buf[i]) << " ";
+        }
         return total_bytes; 
     }
     // void PrivateProtocolCLASS::createCommandFrame(const uint8_t functionCode, const uint8_t commandNum, const protocolInputBuffer_TP& in, protocolOutputBuffer_TP &output)

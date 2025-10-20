@@ -76,7 +76,7 @@ namespace ambot_driver_ns
 
 
     #define DATA_LEGTH_MEC_ARM       4
-    #define DATA_LEGTH_LIFTS         4
+    #define DATA_LEGTH_LIFTS         26
     #define DATA_LEGTH_JAW_MOTOR     6
     
     typedef struct protocolOutputBuffer_TP
@@ -221,9 +221,14 @@ namespace ambot_driver_ns
             union {
                 struct {
                     uint16_t time;
-                    uint16_t reserve;  // 预留
+                    float positon_left;  // 预留
+                    float speed_left;  // 预留
+                    float current_left;  // 预留
+                    float positon_right;  // 预留
+                    float speed_right;  // 预留
+                    float current_right;  // 预留
                 } real;
-                uint8_t data[4];
+                uint8_t data[26];
             };
         };
 

@@ -40,6 +40,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/RobotState.msg"
   "msg/Performance.msg"
   "action/BimaxFunction.action"
+  "srv/LedControl.srv"
+  "srv/MagnetControl.srv" 
   DEPENDENCIES
     std_msgs
     sensor_msgs
@@ -47,6 +49,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     geometry_msgs
     builtin_interfaces
     action_msgs
+  
 )
 
 ament_export_dependencies(rosidl_default_runtime)

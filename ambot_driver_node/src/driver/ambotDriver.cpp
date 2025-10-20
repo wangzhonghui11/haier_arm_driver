@@ -84,6 +84,7 @@ namespace ambot_driver_ns{
     
     AmbotDriverCLASS::~AmbotDriverCLASS()
     {
+      delete  protocol;
     }
     
     ssize_t AmbotDriverCLASS::txPacket(protocolOutputBuffer_TP &out)
@@ -217,6 +218,7 @@ namespace ambot_driver_ns{
                 printf("receive data thread exit!!\n");
                 pthread_exit(NULL);
             }
+            //100hz
             usleep(100000);
         //    currentReadCount=printReceivedDataWithFrequency(motorFd);
             currentReadCount = read(motorFd, read_buffer,LEN_MAX);
@@ -225,9 +227,9 @@ namespace ambot_driver_ns{
                 #ifdef DEBUG_MODE
                 printByteStream(read_buffer, currentReadCount);
                 #endif
-                
+            // printByteStream(read_buffer, currentReadCount);    
                 // 协议处理（自动包含帧格式打印）
-            protocol->processFrame(read_buffer,currentReadCount); 
+             protocol->processFrame(read_buffer,currentReadCount); 
             } 
         }
         
@@ -236,7 +238,7 @@ namespace ambot_driver_ns{
     void AmbotDriverCLASS::ProccessAllMotorStateFromMCU(void){
         for(;;)
        {
-           
+           //50hz
             usleep(200000);
            if (threadStop)
             {
@@ -247,15 +249,15 @@ namespace ambot_driver_ns{
        }
 
     }
-    void  AmbotDriverCLASS::floatToUint32(float input, uint8_t* des) {
+    void AmbotDriverCLASS::floatToUint32(float input, uint8_t* des) {
         uint32_t bits;
         memcpy(&bits, &input, sizeof(float));
 
-        // 大端序存储
-        des[0] = (bits >> 24) & 0xFF;
-        des[1] = (bits >> 16) & 0xFF;
-        des[2] = (bits >> 8)  & 0xFF;
-        des[3] = bits & 0xFF;
+        // 小端序存储（低字节在前）
+        des[0] = bits & 0xFF;          // 最低字节
+        des[1] = (bits >> 8) & 0xFF;
+        des[2] = (bits >> 16) & 0xFF;
+        des[3] = (bits >> 24) & 0xFF;  // 最高字节
     }
     void* AmbotDriverCLASS::newReadMotorThread(void* arg)
     {
@@ -295,18 +297,51 @@ namespace ambot_driver_ns{
         return setMotorLocomotionCommand(cmdframGroup[STORE_NUM_LIFTS_SET]);
 
     }
+    bool AmbotDriverCLASS::YiyouMotorprocess(bimax_msgs::msg::RobotCommand& cmd)
+    {
+        uint8_t des_left[4];
+        uint8_t des_right[4];
+        floatToUint32(cmd.motor_command[0].q, des_left);  // 填充 des_left
+        floatToUint32(cmd.motor_command[4].q, des_right); // 填充 des_right
+        uint8_t databuf[8];
+        memcpy(databuf, des_left, 4);      // 前 4 字节 = des_left
+        memcpy(databuf + 4, des_right, 4); // 后 4 字节 = des_right
+        // std::cout << "databuf: ";
+        // for (int i = 0; i < 8; i++) {
+        //     std::cout << "0x" << std::hex << std::setw(2) << std::setfill('0') 
+        //             << static_cast<int>(databuf[i]) << " ";
+        // }
+        // std::cout << std::endl;
+        cmdframLiftsSet.databuf=databuf;
+        return setMotorLocomotionCommand(cmdframGroup[STORE_NUM_LIFTS_SET]);
+
+    }
     bool AmbotDriverCLASS::CommandFrameProcess(bimax_msgs::msg::RobotCommand& cmd)
     {
         LifterMotorprocess(cmd);
+        return true;
+    }
+    bool AmbotDriverCLASS::CommandServeLedProcess(uint8_t green,uint8_t yellow)
+    {
+        uint8_t led[2]={green,yellow};
+        cmdframLedSet.databuf=led;
+        setMotorLocomotionCommand(cmdframGroup[STROE_NUM_LED_SET]);
+        return true;
+    }
+    bool AmbotDriverCLASS::CommandServeMagnetProcess(uint8_t left_magnet_state,uint8_t right_magnet_state)
+    {
+        uint8_t magnet[2]={left_magnet_state,right_magnet_state};
+        cmdframMagnetet.databuf=magnet;
+        setMotorLocomotionCommand(cmdframGroup[STORE_NUM_MAGNET_SET]);
         return true;
     }
     bool AmbotDriverCLASS::setMotorLocomotionCommand(CommFrame* frame)
     {
         protocolOutputBuffer_TP sendBuff;
         //update all motor command data
-        uint8_t led[2]={0x2,0x2};
-        cmdframLedSet.databuf=led;
-        uint8_t cmdId=cmdframLedSet.cmd_ID;
+        // uint8_t led[2]={0x2,0x2};
+        // cmdframLedSet.databuf=led;
+        uint8_t cmdId=frame->cmd_ID;
         //sendBuff.length = 10;
         //uint8_t temp[] = {0xF0, 0xF0, 0x00, 0x01, 0x03, 0x08, 0x00, 0x00, 0x02, 0xf0};
         //memcpy(sendBuff.buffer, temp, sendBuff.length);

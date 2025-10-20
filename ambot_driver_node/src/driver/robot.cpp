@@ -15,10 +15,8 @@ Robot::Robot(int argc, char** argv)
 {
     rclcpp::init(argc, argv);
     ros = new ambot_driver_ns::RosClass(argc, argv,"ambot_driver_node");
-    // wheelVelCmd.resize(ros->robotFeatures.wheelMotorNum);
     spin_thread_ = std::thread([this]() {
-        rclcpp::spin(ros->get_node_base_interface());
-    });
+    rclcpp::spin(ros->get_node_base_interface());});
 }
 
 /**  
@@ -29,8 +27,8 @@ Robot::Robot(int argc, char** argv)
     */
 Robot::~Robot()
 {
-    // wheelVelCmd.clear();
-    // delete robotDriver;
+
+    delete robotDriver;
     if (spin_thread_.joinable()) {
         spin_thread_.join();
     }
@@ -73,28 +71,44 @@ void Robot::runEnd(void)
     */
 bool Robot::run(void)
 {
+
+        // 初始化时间记录
+    static auto last_control_time = std::chrono::steady_clock::now();
+    static auto last_tools_time = std::chrono::steady_clock::now();
      if(rclcpp::ok())
     {
-        // if(ros->terminate)
-        // {
-        //     ros->setTerminateValue();
-        //     return false;                   //if return false, program will end, then will go to deconstruct function
-        // }
-        // ros->robotFbValuePub(robotDriver->rosData);
-        if(ros->getJointMotorCommand(CommandValues))
+
+        auto now = std::chrono::steady_clock::now();
+        // 任务1：电机控制（50ms周期）
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_control_time).count() >= 100) 
         {
-         std::cout<<"joint_q="<<CommandValues.motor_command[0].q<<std::endl;
-              robotDriver->CommandFrameProcess(CommandValues);
+            if(ros->getJointMotorCommand(CommandValues)) 
+            {
+                robotDriver->CommandFrameProcess(CommandValues);
+            }
+            last_control_time = now;  // 更新时间戳
         }
-        // if (ros->robotFeatures.robotType  == robotDriver->robotType.at(ambot_W1))
-        //     ros->getWheelMotorCommand(wheelVelCmd);
-         if(!robotDriver->threadStop)
-        // {
-        //     robotDriver->setMotorLocomotionCommand(ambotCommand, wheelVelCmd);
-        // }else
-        // {
-        //     ros->setTerminateValue();
-        // }
+
+        // 任务2：LED控制（100ms周期） 
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_tools_time).count() >= 100) 
+        {
+            bool green_changed = ros->get_green_state(rad_led);
+            bool yellow_changed = ros->get_yellow_state(yellow_led);
+            bool left_magnet_changed =ros->get_left_magnet_state(left_magnet_state);
+            bool right_magnet_changed =ros->get_right_magnet_state(right_magnet_state);           
+
+           if(left_magnet_changed||right_magnet_changed)
+           {
+                robotDriver->CommandServeMagnetProcess(left_magnet_state, right_magnet_state);
+            }
+            if(green_changed||yellow_changed)
+            {
+
+                robotDriver->CommandServeLedProcess(rad_led, yellow_led);
+            }
+            last_tools_time = now;  // 更新时间戳
+        }
+ 
         ros->rosSleep();
         return true; 
     }else

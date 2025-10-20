@@ -30,20 +30,25 @@ public:
 
     // 入队（强制深拷贝）
     bool push(DeviceType type, const void* data, size_t size, 
-             std::chrono::milliseconds timeout = 50ms) 
+            std::chrono::milliseconds timeout = 50ms) 
     {
+        if (size > 1024 * 1024) return false;  // 拒绝超大请求
+
         std::unique_lock<std::mutex> lock(mutex_);
-        
-        // 等待队列有空位
         if (!cv_push_.wait_for(lock, timeout, [this] { 
             return queue_.size() < max_capacity_; 
         })) {
-            return false; // 入队超时
+            return false;
         }
 
-        queue_.push(std::make_shared<SafePacket>(type, data, size));
-        cv_pop_.notify_one();
-        return true;
+        try {
+            queue_.push(std::make_shared<SafePacket>(type, data, size));
+            cv_pop_.notify_one();
+            return true;
+        } catch (const std::bad_alloc& e) {
+            std::cerr << "Memory allocation failed: " << e.what() << std::endl;
+            return false;
+        }
     }
 
     // 非阻塞出队
@@ -88,7 +93,7 @@ private:
     mutable std::mutex mutex_;
     std::condition_variable cv_push_; // 生产者条件变量
     std::condition_variable cv_pop_;  // 消费者条件变量
-    size_t max_capacity_ = 1000;      // 默认队列容量
+    size_t max_capacity_ = 100;      // 默认队列容量
 };
 
 } // namespace ambot_driver_ns

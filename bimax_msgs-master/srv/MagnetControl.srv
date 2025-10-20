@@ -1,0 +1,7 @@
+# 请求参数
+uint8 left_magnet_state  # 左磁铁状态：0=关, 1=开
+uint8 right_magnet_state # 右磁铁状态：0=关, 1=开
+---
+# 响应结果
+bool success       # 是否执行成功
+string message     # 详细信息

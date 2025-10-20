@@ -90,11 +90,13 @@ namespace ambot_driver_ns
         }
         cmd_sub_ = create_subscription<bimax_msgs::msg::RobotCommand>("/bimaxArmCommandValues", command_qos,
         std::bind(&RosClass::commandCallback, this, std::placeholders::_1));
-
-    // 状态发布
+        // 初始化服务
+        service_led = create_service<bimax_msgs::srv::LedControl>("led_control",std::bind(&RosClass::led_handle_request, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(get_logger(), "LED控制服务已启动");
+        service_magnet = create_service<bimax_msgs::srv::MagnetControl>("magnet_control",std::bind(&RosClass::magnet_handle_request, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(get_logger(), "磁铁控制服务已启动");
+        // 状态发布
         state_pub_ = create_publisher<bimax_msgs::msg::RobotState>("/bimaxArmStateValues", 10);
-
-        // // 8. init subscribe     
         RCLCPP_INFO(this->get_logger(), "robot Driver(base communication) init successful!");
         return true;
     }
@@ -104,6 +106,77 @@ namespace ambot_driver_ns
         command_queue_.push(*msg);
         queue_cv_.notify_one();  // 通知有新的命令到达
     }
+
+    void RosClass::magnet_handle_request(
+        const std::shared_ptr<bimax_msgs::srv::MagnetControl::Request> request,
+        std::shared_ptr<bimax_msgs::srv::MagnetControl::Response> response)
+    {
+        // 验证输入状态是否合法
+        if (request->left_magnet_state > 1 || request->right_magnet_state > 1) {
+            response->success = false;
+            response->message = "错误：状态值必须是0、1";
+            return;
+        }
+        left_magnet_state_ = request->left_magnet_state;
+        right_magnet_state_ = request->right_magnet_state;
+        response->success = true;
+        response->message = "操作成功";
+    }
+    bool  RosClass::get_left_magnet_state(uint8_t  &left_magnet_state) { 
+            left_magnet_state=left_magnet_state_;
+        if(left_magnet_state != last_left_magnet_state_){
+            last_left_magnet_state_ = left_magnet_state;          
+            return true;
+        }
+            return false;
+    }
+
+    bool  RosClass::get_right_magnet_state(uint8_t  &right_magnet_state) { 
+            right_magnet_state=right_magnet_state_;
+        if(right_magnet_state != last_right_magnet_state_){
+            last_right_magnet_state_ = right_magnet_state;          
+            return true;
+        }
+            return false;
+    }
+
+    void RosClass::led_handle_request(
+        const std::shared_ptr<bimax_msgs::srv::LedControl::Request> request,
+        std::shared_ptr<bimax_msgs::srv::LedControl::Response> response)
+    {
+        // 验证输入状态是否合法
+        if (request->green_state > 2 || request->yellow_state > 2) {
+            response->success = false;
+            response->message = "错误：状态值必须是0、1或2";
+            return;
+        }
+        green_state_ = request->green_state;
+        yellow_state_ = request->yellow_state;
+        response->success = true;
+        response->message = "操作成功";
+    }
+    bool RosClass::get_green_state(uint8_t &current_state) { 
+        current_state = green_state_;
+        if(current_state != last_green_state_) {
+            RCLCPP_INFO(get_logger(), "绿灯状态变更: %d -> %d", 
+                    last_green_state_, current_state);
+            last_green_state_ = current_state;
+            return true; // 状态已变化
+        }
+        return false; // 状态未变化
+    }
+
+    bool RosClass::get_yellow_state(uint8_t &current_state) {
+        current_state = yellow_state_;
+        if(current_state != last_yellow_state_) {
+            RCLCPP_INFO(get_logger(), "黄灯状态变更: %d -> %d",
+                    last_yellow_state_, current_state);
+            last_yellow_state_ = current_state;
+            return true;
+        }
+        return false;
+    }
+
 
     // /**  
     // *   @brief      output the motor data to argv
@@ -124,14 +197,14 @@ namespace ambot_driver_ns
     return false;
     }
 
- 
-    // /**  
-    // *   @brief      get ros handle
-    // *   Parameters:
-    // *   @return     return the pointer of ros handle of RosClass   
-    // */
+};
+    /**  
+    *   @brief      get ros handle
+    *   Parameters:
+    *   @return     return the pointer of ros handle of RosClass   
+    */
     // rclcpp::Node::SharedPtr RosClass::getHandle()
     // {
     //     return shared_from_this();
     // }
-} // namespace
+// namespace

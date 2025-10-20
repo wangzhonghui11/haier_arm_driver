@@ -15,6 +15,8 @@
 #include "protocolStruct.hpp"
 #include "crcModbus.hpp"
 #include "queue.hpp"
+#include <iomanip>  // 用于 std::hex 格式化
+
 namespace ambot_driver_ns
 {
 

@@ -37,6 +37,10 @@ class Robot
         std::vector<float> wheelVelCmd;
         std::thread spin_thread_;
         bool imuConnectFlag = false;
+        uint8_t rad_led;
+        uint8_t yellow_led;  
+        uint8_t left_magnet_state;
+        uint8_t right_magnet_state;         
     public:
         Robot(int argc, char** argv);
         ~Robot();
