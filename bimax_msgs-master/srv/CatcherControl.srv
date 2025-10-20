@@ -1,6 +1,7 @@
 # 请求参数
-uint8 green_state  # 绿灯状态：0=关, 1=开, 2=闪烁
-uint8 yellow_state # 黄灯状态：0=关, 1=开, 2=闪烁
+uint16_t catcher_motor_pwm      #吸尘电机占空比：0 - 1000；
+uint8_t  catcher_gear          #吸尘电机档位：2高 1中 0低
+uint8_t  catcher_state        #吸尘电机控制：1开 0关
 ---
 # 响应结果
 bool success       # 是否执行成功
