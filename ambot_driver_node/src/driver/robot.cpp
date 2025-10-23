@@ -80,12 +80,17 @@ bool Robot::run(void)
 
         auto now = std::chrono::steady_clock::now();
         // 任务1：电机控制（50ms周期）
-        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_control_time).count() >= 100) 
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_control_time).count() >= 10) 
         {
+            bool jaw_changed=ros->get_jaw_cmd(jaw_cmd); 
             if(ros->getJointMotorCommand(CommandValues)) 
             {
                 robotDriver->CommandFrameProcess(CommandValues);
-            }
+            }            
+            if(jaw_changed)
+           {
+                 robotDriver->JawCommandProcess(jaw_cmd);
+            }  
             last_control_time = now;  // 更新时间戳
         }
 
@@ -99,7 +104,8 @@ bool Robot::run(void)
             bool catcher_gear_changed =ros->get_catcher_gear_state(catcher_gear);
             bool catcher_state_changed =ros->get_catcher_state(catcher_state);  
             bool mop_motor_pwm_changed =ros->get_mop_motor_pwm_state(mop_motor_pwm);
-            bool mop_state_changed =ros->get_mop_state(mop_state);    
+            bool mop_state_changed =ros->get_mop_state(mop_state); 
+
             if(left_magnet_changed||right_magnet_changed)
            {
                 robotDriver->CommandServeMagnetProcess(left_magnet_state, right_magnet_state);

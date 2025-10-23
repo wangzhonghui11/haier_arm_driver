@@ -90,6 +90,8 @@ namespace ambot_driver_ns
         }
         cmd_sub_ = create_subscription<bimax_msgs::msg::RobotCommand>("/bimaxArmCommandValues", command_qos,
         std::bind(&RosClass::commandCallback, this, std::placeholders::_1));
+        jaw_sub = create_subscription<std_msgs::msg::Float32>("/gripper_position",command_qos,std::bind(&RosClass::jawCallback, this, std::placeholders::_1));
+
         // 初始化服务
         service_mop = create_service<bimax_msgs::srv::MopControl>("mop_control",std::bind(&RosClass::mop_handle_request, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(get_logger(), "拖布控制服务已启动");
@@ -100,13 +102,27 @@ namespace ambot_driver_ns
         service_magnet = create_service<bimax_msgs::srv::MagnetControl>("magnet_control",std::bind(&RosClass::magnet_handle_request, this, std::placeholders::_1, std::placeholders::_2));
         RCLCPP_INFO(get_logger(), "磁铁控制服务已启动");
         // 状态发布
+   
         state_pub_ = create_publisher<bimax_msgs::msg::RobotState>("/bimaxArmStateValues", 10);
         RCLCPP_INFO(this->get_logger(), "robot Driver(base communication) init successful!");
         return true;
     }
+    void RosClass::jawCallback(const std_msgs::msg::Float32::SharedPtr msg) 
+    {
+        jaw_cmd_=msg->data;
+    }
+    bool  RosClass::get_jaw_cmd(float  &jaw_cmd) { 
+        jaw_cmd=jaw_cmd_;
+        if(jaw_cmd != last_jaw_cmd_){
+            last_jaw_cmd_ = jaw_cmd;          
+            return true;
+        }
+            return false;
+    }
     void RosClass::commandCallback(const bimax_msgs::msg::RobotCommand::SharedPtr msg) 
     {
         std::lock_guard<std::mutex> lock(queue_mutex_);
+
         command_queue_.push(*msg);
         queue_cv_.notify_one();  // 通知有新的命令到达
     }
@@ -253,7 +269,7 @@ namespace ambot_driver_ns
     bool RosClass::getJointMotorCommand(bimax_msgs::msg::RobotCommand& cmd) {
     std::unique_lock<std::mutex> lock(queue_mutex_);
     
-    if (queue_cv_.wait_for(lock, std::chrono::milliseconds(10), 
+    if (queue_cv_.wait_for(lock, std::chrono::milliseconds(1), 
                          [this]{ return !command_queue_.empty(); }))
     {
         cmd = command_queue_.front();

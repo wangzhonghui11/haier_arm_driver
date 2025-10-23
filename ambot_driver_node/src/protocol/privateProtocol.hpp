@@ -16,7 +16,7 @@
 #include "crcModbus.hpp"
 #include "queue.hpp"
 #include <iomanip>  // 用于 std::hex 格式化
-
+#include <cstring> // 包含 memcpy
 namespace ambot_driver_ns
 {
 
@@ -30,10 +30,11 @@ namespace ambot_driver_ns
         ~PrivateProtocolCLASS();
         uint8_t processFrame(const uint8_t* data, uint16_t length);
         uint8_t comm_frame_store(CommFrame* statusframGroup, const uint8_t* databuf);
-        void  data_consumer(); 
+        void  updateDataConsumer();
         //void createCommandFrame(const uint8_t functionCode, const uint8_t commandNum, const protocolInputBuffer_TP& in, protocolOutputBuffer_TP &output);
         uint8_t comm_frame_upload(CommFrame* frame, uint8_t* output_buf) ;
-        
+        void lifterDateUpdate(std::vector<uint8_t> data, float& left_value, float& right_value);
+        void jawMotorDateUpdate(std::vector<uint8_t> data, float& postion);
     };
 
     /**  

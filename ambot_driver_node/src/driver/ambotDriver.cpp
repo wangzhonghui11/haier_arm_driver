@@ -227,7 +227,7 @@ namespace ambot_driver_ns{
                 #ifdef DEBUG_MODE
                 printByteStream(read_buffer, currentReadCount);
                 #endif
-                printByteStream(read_buffer, currentReadCount);    
+                //printByteStream(read_buffer, currentReadCount);
                 // 协议处理（自动包含帧格式打印）
              protocol->processFrame(read_buffer,currentReadCount); 
             } 
@@ -245,9 +245,8 @@ namespace ambot_driver_ns{
                 printf("Proccess data thread exit!!\n");
                 pthread_exit(NULL);
             }
-            protocol->data_consumer();
+            protocol->updateDataConsumer();
        }
-
     }
     void AmbotDriverCLASS::floatToUint32(float input, uint8_t* des) {
         uint32_t bits;
@@ -299,26 +298,47 @@ namespace ambot_driver_ns{
     }
     bool AmbotDriverCLASS::YiyouMotorprocess(bimax_msgs::msg::RobotCommand& cmd)
     {
-        uint8_t des_left[4];
-        uint8_t des_right[4];
-        floatToUint32(cmd.motor_command[0].q, des_left);  // 填充 des_left
-        floatToUint32(cmd.motor_command[4].q, des_right); // 填充 des_right
-        uint8_t databuf[8];
-        memcpy(databuf, des_left, 4);      // 前 4 字节 = des_left
-        memcpy(databuf + 4, des_right, 4); // 后 4 字节 = des_right
+        uint8_t databuf[28];  // mode + 6x uint32_t
+        uint32_t temp_val;
+
+        // 1. 存储 mode
+        databuf[0] = static_cast<uint8_t>(cmd.motor_command[0].mode);
+
+        // 2. 填充数据（假设 mode=0/1 时有效）
+        if (databuf[0] == 0 || databuf[0] == 1) {
+            const int offsets[] = {1, 5, 9, 13, 17, 21};  // 各字段的偏移量
+            const int indices[] = {1, 2, 3, 5, 6, 7};     // motor_command 的索引
+
+            for (int i = 0; i < 6; i++) {
+                floatToUint32(cmd.motor_command[indices[i]].q, reinterpret_cast<uint8_t*>(&temp_val));
+                memcpy(databuf + offsets[i], &temp_val, 4);
+            }
+        }
+        for (int i = 0; i < 25; i++) {
+            std::cout << "databuf[" << i << "] = " 
+                    << static_cast<int>(databuf[i]) << std::endl;
+        }
         // std::cout << "databuf: ";
         // for (int i = 0; i < 8; i++) {
         //     std::cout << "0x" << std::hex << std::setw(2) << std::setfill('0') 
         //             << static_cast<int>(databuf[i]) << " ";
         // }
         // std::cout << std::endl;
-        cmdframLiftsSet.databuf=databuf;
-        return setMotorLocomotionCommand(cmdframGroup[STORE_NUM_LIFTS_SET]);
+        cmdframMecArmSet.databuf=databuf;
+        return setMotorLocomotionCommand(cmdframGroup[STORE_NUM_MECARM_SET]);
 
+    }
+    bool AmbotDriverCLASS::JawCommandProcess(float pos)
+    {
+        uint8_t jaw_pos[4];
+        floatToUint32(pos, jaw_pos);  // 填充 des_left
+        cmdframJawSet.databuf=jaw_pos;
+        return setMotorLocomotionCommand(cmdframGroup[STORE_NUM_JAW_SET]);
     }
     bool AmbotDriverCLASS::CommandFrameProcess(bimax_msgs::msg::RobotCommand& cmd)
     {
         LifterMotorprocess(cmd);
+         //YiyouMotorprocess(cmd);
         return true;
     }
     bool AmbotDriverCLASS::CommandServeLedProcess(uint8_t green,uint8_t yellow)
@@ -337,7 +357,7 @@ namespace ambot_driver_ns{
     }
     bool AmbotDriverCLASS::CommandServeMopProcess(uint16_t mop_motor_pwm,uint8_t mop_state)
     {
-        uint8_t catcher[3]={(mop_motor_pwm >> 8) & 0xFF,mop_motor_pwm & 0xFF,mop_state};
+        uint8_t catcher[3]={mop_motor_pwm & 0xFF,(mop_motor_pwm >> 8) & 0xFF,mop_state};
         cmdframMopSet.databuf=catcher;
         setMotorLocomotionCommand(cmdframGroup[STORE_NUM_MOP_SET]);
         return true;

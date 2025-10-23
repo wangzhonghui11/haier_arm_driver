@@ -236,10 +236,9 @@ namespace ambot_driver_ns
                          type = DeviceType::LIFTS;
                         store_length = comm_frame_store(statusframGroup[ID_LIFTS_STORE], &data[i]);
                         arm_queue.push(type, statusframGroup[ID_LIFTS_STORE]->databuf,store_length-1);
-                        statusframGroup[ID_LIFTS_STORE]->print();   
                         #ifdef DEBUG_MODE
                         statusframGroup[ID_LIFTS_STORE]->print();                      
-                        #endif                        
+                        #endif                             
                         break;
                         
                     case ID_JAW_MOTOR_UPLOAD:
@@ -248,8 +247,9 @@ namespace ambot_driver_ns
                          arm_queue.push(type, statusframGroup[ID_JAW_MOTOR_STORE]->databuf,store_length-1);
                         #ifdef DEBUG_MODE
                         statusframGroup[ID_JAW_MOTOR_STORE]->print();                      
-                        #endif   
+                        #endif     
                         break;
+                        
                 }
                 
                 if (store_length != 0) {
@@ -263,30 +263,42 @@ namespace ambot_driver_ns
         return result;
     }
 
-        void  PrivateProtocolCLASS::data_consumer() {
+    void  PrivateProtocolCLASS::updateDataConsumer() {
             DeviceType type;
             std::vector<uint8_t> data;
             if (arm_queue.pop(type,data, 10ms)) {
                 switch (type) {
                     case DeviceType::MEC_ARM:
-                        
                         std::cout<<"MEC_ARM"<<std::endl;
                         break;
-                    case DeviceType::LIFTS:
-                        std::cout << std::hex << std::setfill('0');  // 设置为16进制，填充0
-                        for (auto it = data.begin(); it != data.end(); ++it) {
-                            std::cout << "0x" << std::setw(2) << static_cast<int>(*it) << " ";
-                        }
-                            std::cout << std::endl;
-                        break;
-                    case DeviceType::JAW_MOTOR:
-                        std::cout<<"JAW_MOTOR"<<std::endl;
-                        break;
+                    case DeviceType::LIFTS:{
+                        float left, right;
+                        lifterDateUpdate(data, left, right); // 通过引用返回
+                        break;}
+                    case DeviceType::JAW_MOTOR:{
+                        float postion;
+                        jawMotorDateUpdate(data, postion);
+                        break;}
                 }
             }
         }
+    void PrivateProtocolCLASS::jawMotorDateUpdate(std::vector<uint8_t> data, float& postion) 
+    {
+        uint8_t pos[] = { data[4], data[5], data[6], data[7] };
+        memcpy(&postion, pos, sizeof(float));
+        std::cout << "夹爪位置: " << postion << std::endl;
+    }
 
+    void PrivateProtocolCLASS::lifterDateUpdate(std::vector<uint8_t> data, float& left_value, float& right_value) {
+        uint8_t left_bytes[] = { data[4], data[5], data[6], data[7] };
+        memcpy(&left_value, left_bytes, sizeof(float));
 
+        uint8_t right_bytes[] = { data[16], data[17], data[18], data[19] };
+        memcpy(&right_value, right_bytes, sizeof(float));
+
+        std::cout << "左升降位置: " << left_value << std::endl;
+        std::cout << "右升降位置: " << right_value << std::endl;
+    }
     /**  
     *   @brief      create get ID protocol frame
         Parameters:

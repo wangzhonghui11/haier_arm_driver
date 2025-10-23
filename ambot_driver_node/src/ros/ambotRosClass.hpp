@@ -47,6 +47,7 @@ namespace ambot_driver_ns
         // bool getSingleServerParameter(std::string paramName, int& getData);
         // rclcpp::Node::SharedPtr getHandle();
         // void topicFrequencyWarning(void);
+        void jawCallback(const std_msgs::msg::Float32::SharedPtr msg) ;
         void commandCallback(const bimax_msgs::msg::RobotCommand::SharedPtr msg) ;
         bool get_green_state(uint8_t  &green_state_) ;
         bool get_yellow_state(uint8_t  &yellow_state_);  
@@ -56,6 +57,7 @@ namespace ambot_driver_ns
         bool get_catcher_state(uint8_t  &catcher_state);
         bool get_mop_state(uint8_t  &mop_state) ;
         bool get_mop_motor_pwm_state(uint16_t  &mop_motor_pwm_state);
+        bool get_jaw_cmd(float  &jaw_cmd); 
     private:
         /* public topic */
         // rclcpp::Publisher<ambot_msg::msg::AmbotState>::SharedPtr sensorValuePub;
@@ -74,6 +76,8 @@ namespace ambot_driver_ns
         // /* receive command buffer */
         // ambot_msg::msg::AmbotCommand commandValues;
         // std::vector<float> wheelCmd;
+        float last_jaw_cmd_;
+        float jaw_cmd_;
         uint8_t last_mop_state_;
         uint16_t last_mop_motor_pwm_state_;
         uint8_t mop_state_;
@@ -101,6 +105,7 @@ namespace ambot_driver_ns
         // /* other private variables */
          std::string robot_mkey;
         rclcpp::Subscription<bimax_msgs::msg::RobotCommand>::SharedPtr cmd_sub_;
+        rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr jaw_sub;
         rclcpp::Publisher<bimax_msgs::msg::RobotState>::SharedPtr state_pub_;
         bimax_msgs::msg::RobotCommand CommandValues;
         void led_handle_request(const std::shared_ptr<bimax_msgs::srv::LedControl::Request> request,std::shared_ptr<bimax_msgs::srv::LedControl::Response> response);

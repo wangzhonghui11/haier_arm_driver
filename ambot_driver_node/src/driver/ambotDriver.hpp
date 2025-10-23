@@ -29,6 +29,7 @@
 #include "bimax_msgs/msg/robot_command.hpp"
 #include "bimax_msgs/msg/robot_state.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
+#include "std_msgs/msg/float32.hpp"
 #include "bimax_msgs/srv/led_control.hpp"  
 #include "bimax_msgs/srv/magnet_control.hpp"  
 #include "bimax_msgs/srv/catcher_control.hpp"
@@ -68,6 +69,7 @@ namespace ambot_driver_ns{
         ~AmbotDriverCLASS();
         /* open function */
         bool initial(void);
+        bool JawCommandProcess(float pos);
         bool CommandFrameProcess(bimax_msgs::msg::RobotCommand& cmd);
         bool CommandServeLedProcess(uint8_t green,uint8_t yellow);
         bool CommandServeMagnetProcess(uint8_t green,uint8_t yellow);

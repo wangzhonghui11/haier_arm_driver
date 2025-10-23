@@ -44,7 +44,8 @@ class Robot
         uint8_t catcher_gear;
         uint8_t catcher_state; 
         uint16_t mop_motor_pwm;
-        uint8_t mop_state;           
+        uint8_t mop_state;  
+        float jaw_cmd;         
     public:
         Robot(int argc, char** argv);
         ~Robot();

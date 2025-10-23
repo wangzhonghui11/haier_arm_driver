@@ -10,7 +10,7 @@
 #define __PROTOCOL_STRUCT_HPP__
 
 #include <iostream>
-// #define DEBUG_MODE  1
+ //#define DEBUG_MODE 1
 namespace ambot_driver_ns
 {
     /*these macro for global use*/
@@ -64,7 +64,7 @@ namespace ambot_driver_ns
     #define DATA_LEGTH_JAW_SET         4
     #define DATA_LEGTH_CATCHER_SET     4
     #define DATA_LEGTH_MAGNET_SET      2   // 
-    #define DATA_LEGTH_MECARM_SET      8
+    #define DATA_LEGTH_MECARM_SET      25
     #define DATA_LEGTH_LIFTS_SET       8
     #define DATA_LEGTH_LED_SET         2
     #define DATA_LEGTH_HEARTBEAT       0
@@ -75,9 +75,9 @@ namespace ambot_driver_ns
     #define ID_JAW_MOTOR_UPLOAD      0x13
 
 
-    #define DATA_LEGTH_MEC_ARM       4
-    #define DATA_LEGTH_LIFTS         26
-    #define DATA_LEGTH_JAW_MOTOR     6
+    #define DATA_LEGTH_MEC_ARM       84
+    #define DATA_LEGTH_LIFTS         28
+    #define DATA_LEGTH_JAW_MOTOR     8
     
     typedef struct protocolOutputBuffer_TP
     {
@@ -139,7 +139,7 @@ namespace ambot_driver_ns
             };
         };
 
-        // 捕捉器设置数据结构
+        // 吸尘设置数据结构
         struct CatcherSet {
             union {
                 struct {
@@ -166,10 +166,17 @@ namespace ambot_driver_ns
         struct MecArmSet {
             union {
                 struct {
-                    uint32_t left_pos;
-                    uint32_t right_pos;  // 预留
+                uint8_t     Motor_Control_Mode;
+                uint8_t     reserver1;
+                uint16_t     reserver2;                   
+                uint32_t     position_motor1;   // 
+                uint32_t     position_motor2;   //
+                uint32_t     position_motor3;   //
+                uint32_t     position_motor4;   //
+                uint32_t     position_motor5;   //
+                uint32_t     position_motor6;   //
                 } real;
-                uint8_t data[8];
+                uint8_t data[28];
             };
         };
 
@@ -206,20 +213,55 @@ namespace ambot_driver_ns
         };
 
         // 机械臂上传数据结构
-        struct UploadMecArm {
-            union {
-                struct {
-                    uint16_t time;
-                    uint16_t reserve;  // 预留
-                } real;
-                uint8_t data[4];
-            };
+    struct UploadMecArm 
+    {
+        union{
+            struct
+            {
+            uint16_t   reserve;
+            uint16_t   time;
+            
+            float      pos_rad_motor1;    //Î»ÖÃ,×ª»»Îª¹€³Ìµ¥Î»
+            float      vel_rad_s_motor1;  //ËÙ¶È,×ª»»Îª¹€³Ìµ¥Î»
+            float      torque_nm_motor1;  //Å€ŸØ,×ª»»Îª¹€³Ìµ¥Î» 		
+            uint16_t   status_motor1;     //×ŽÌ¬×Ö
+            uint16_t   error_motor1;      //ŽíÎóÂë
+                
+            float      pos_rad_motor2;
+            float      vel_rad_s_motor2; 
+            float      torque_nm_motor2; 			
+            uint16_t   status_motor2;     
+            uint16_t   error_motor2;     
+                
+            float      pos_rad_motor3;
+            float      vel_rad_s_motor3;
+            float      torque_nm_motor3; 	
+            uint16_t   status_motor3;    
+            uint16_t   error_motor3;     		
+                
+            float      pos_rad_motor4; 
+            float      vel_rad_s_motor4;
+            float      torque_nm_motor4; 	
+            uint16_t   status_motor4;    
+            uint16_t   error_motor4;    	
+
+            float      pos_rad_motor5;
+            float      vel_rad_s_motor5;
+            float      torque_nm_motor5; 	
+            uint16_t   status_motor5;    
+            uint16_t   error_motor5;    
+                
+            }real;
+        
+            uint8_t data[84];
         };
+    };
 
         // 升降机构上传数据结构
         struct UploadLifts {
             union {
                 struct {
+                    u_int16_t reserver;
                     uint16_t time;
                     float positon_left;  // 预留
                     float speed_left;  // 预留
@@ -228,7 +270,7 @@ namespace ambot_driver_ns
                     float speed_right;  // 预留
                     float current_right;  // 预留
                 } real;
-                uint8_t data[26];
+                uint8_t data[28];
             };
         };
 
@@ -236,10 +278,11 @@ namespace ambot_driver_ns
         struct UploadJaw {
             union {
                 struct {
+                    u_int16_t reserver;                  
                     uint16_t time;
                     float jaw_motor_angle;  // 0-180度
                 } real;
-                uint8_t data[6];
+                uint8_t data[8];
             };
         };
 
@@ -265,7 +308,7 @@ namespace ambot_driver_ns
         
         // 打印数据内容（示例打印前16字节）
         std::cout << "  Data: ";
-        for (int i = 0; i < std::min(16, (int)length-1); ++i) {
+        for (int i = 0; i < std::min(84, (int)length-1); ++i) {
             std::cout << "0x" << std::hex << (int)databuf[i] << " ";
         }
         std::cout << std::endl;
