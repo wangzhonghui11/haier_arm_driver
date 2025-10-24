@@ -263,30 +263,94 @@ namespace ambot_driver_ns
         return result;
     }
 
-    void  PrivateProtocolCLASS::updateDataConsumer() {
+    void  PrivateProtocolCLASS::updateDataConsumer(YiyouMecArm &mecarm,float &lifter_l_pos,float  &lifter_r_pos,float &jaw_pos) {
             DeviceType type;
             std::vector<uint8_t> data;
-            if (arm_queue.pop(type,data, 10ms)) {
+            if (arm_queue.pop(type,data, 2ms)) {
                 switch (type) {
-                    case DeviceType::MEC_ARM:
-                        std::cout<<"MEC_ARM"<<std::endl;
-                        break;
+                    case DeviceType::MEC_ARM:{
+                        yiyouMotorDateUpdate(data,mecarm); 
+                        break;}
                     case DeviceType::LIFTS:{
-                        float left, right;
-                        lifterDateUpdate(data, left, right); // 通过引用返回
+                        lifterDateUpdate(data, lifter_l_pos, lifter_r_pos); // 通过引用返回
                         break;}
                     case DeviceType::JAW_MOTOR:{
-                        float postion;
-                        jawMotorDateUpdate(data, postion);
+                        jawMotorDateUpdate(data, jaw_pos);
                         break;}
                 }
             }
         }
+    void PrivateProtocolCLASS::yiyouMotorDateUpdate(std::vector<uint8_t> data, YiyouMecArm& mecarm) 
+    {
+        // 检查数据大小是否足够（至少需要 15个float × 4字节 + 10个uint16_t × 2字节 = 80字节）
+        if (data.size() < 84) {
+            std::cerr << "Error: data size too small!" << std::endl;
+            return;
+        }
+
+        // 辅助函数：从 data 的指定位置解析 float
+        auto readFloat = [&data](size_t offset) -> float {
+            float value;
+            memcpy(&value, &data[offset], sizeof(float));
+            return value;
+        };
+
+        // 辅助函数：从 data 的指定位置解析 uint16_t
+        auto readUint16 = [&data](size_t offset) -> uint16_t {
+            uint16_t value;
+            memcpy(&value, &data[offset], sizeof(uint16_t));
+            return value;
+        };
+
+        // 解析并赋值 motor1
+        size_t offset = 4;
+        mecarm.pos_rad_motor1 = readFloat(offset); offset += 4;
+        mecarm.vel_rad_s_motor1 = readFloat(offset); offset += 4;
+        mecarm.torque_nm_motor1 = readFloat(offset); offset += 4;
+        mecarm.status_motor1 = readUint16(offset); offset += 2;
+        mecarm.error_motor1 = readUint16(offset); offset += 2;
+
+        // 解析并赋值 motor2
+        mecarm.pos_rad_motor2 = readFloat(offset); offset += 4;
+        mecarm.vel_rad_s_motor2 = readFloat(offset); offset += 4;
+        mecarm.torque_nm_motor2 = readFloat(offset); offset += 4;
+        mecarm.status_motor2 = readUint16(offset); offset += 2;
+        mecarm.error_motor2 = readUint16(offset); offset += 2;
+
+        // 解析并赋值 motor3
+        mecarm.pos_rad_motor3 = readFloat(offset); offset += 4;
+        mecarm.vel_rad_s_motor3 = readFloat(offset); offset += 4;
+        mecarm.torque_nm_motor3 = readFloat(offset); offset += 4;
+        mecarm.status_motor3 = readUint16(offset); offset += 2;
+        mecarm.error_motor3 = readUint16(offset); offset += 2;
+
+        // 解析并赋值 motor4
+        mecarm.pos_rad_motor4 = readFloat(offset); offset += 4;
+        mecarm.vel_rad_s_motor4 = readFloat(offset); offset += 4;
+        mecarm.torque_nm_motor4 = readFloat(offset); offset += 4;
+        mecarm.status_motor4 = readUint16(offset); offset += 2;
+        mecarm.error_motor4 = readUint16(offset); offset += 2;
+
+        // 解析并赋值 motor5
+        mecarm.pos_rad_motor5 = readFloat(offset); offset += 4;
+        mecarm.vel_rad_s_motor5 = readFloat(offset); offset += 4;
+        mecarm.torque_nm_motor5 = readFloat(offset); offset += 4;
+        mecarm.status_motor5 = readUint16(offset); offset += 2;
+        mecarm.error_motor5 = readUint16(offset); offset += 2;
+
+        // 打印调试信息（可选）
+        // std::cout << "Motor1 Position: " << mecarm.pos_rad_motor1 << " rad" << std::endl;
+        // std::cout << "Motor2 Position: " << mecarm.pos_rad_motor2 << " rad" << std::endl;
+        // std::cout << "Motor3 Position: " << mecarm.pos_rad_motor3 << " rad" << std::endl;
+        // std::cout << "Motor4 Position: " << mecarm.pos_rad_motor4 << " rad" << std::endl;
+        // std::cout << "Motor5 Position: " << mecarm.pos_rad_motor5 << " rad" << std::endl;
+    }
+   
     void PrivateProtocolCLASS::jawMotorDateUpdate(std::vector<uint8_t> data, float& postion) 
     {
         uint8_t pos[] = { data[4], data[5], data[6], data[7] };
         memcpy(&postion, pos, sizeof(float));
-        std::cout << "夹爪位置: " << postion << std::endl;
+        // std::cout << "夹爪位置: " << postion << std::endl;
     }
 
     void PrivateProtocolCLASS::lifterDateUpdate(std::vector<uint8_t> data, float& left_value, float& right_value) {
@@ -296,8 +360,8 @@ namespace ambot_driver_ns
         uint8_t right_bytes[] = { data[16], data[17], data[18], data[19] };
         memcpy(&right_value, right_bytes, sizeof(float));
 
-        std::cout << "左升降位置: " << left_value << std::endl;
-        std::cout << "右升降位置: " << right_value << std::endl;
+        // std::cout << "左升降位置: " << left_value << std::endl;
+        // std::cout << "右升降位置: " << right_value << std::endl;
     }
     /**  
     *   @brief      create get ID protocol frame

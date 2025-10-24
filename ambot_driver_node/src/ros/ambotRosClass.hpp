@@ -58,6 +58,7 @@ namespace ambot_driver_ns
         bool get_mop_state(uint8_t  &mop_state) ;
         bool get_mop_motor_pwm_state(uint16_t  &mop_motor_pwm_state);
         bool get_jaw_cmd(float  &jaw_cmd); 
+        void robotFbValuePub(YiyouMecArm &mecarm,float &lef ,float &righ);
     private:
         /* public topic */
         // rclcpp::Publisher<ambot_msg::msg::AmbotState>::SharedPtr sensorValuePub;

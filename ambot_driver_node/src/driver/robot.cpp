@@ -73,13 +73,20 @@ bool Robot::run(void)
 {
 
         // 初始化时间记录
+    static auto last_states_time = std::chrono::steady_clock::now();
     static auto last_control_time = std::chrono::steady_clock::now();
     static auto last_tools_time = std::chrono::steady_clock::now();
      if(rclcpp::ok())
     {
 
         auto now = std::chrono::steady_clock::now();
-        // 任务1：电机控制（50ms周期）
+        // 任务0：电机反馈（20ms周期）
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_states_time).count() >= 20) 
+        {
+            ros->robotFbValuePub(robotDriver->mecarm,robotDriver->lifter_l_pos,robotDriver->lifter_r_pos);
+            last_states_time=now;
+        }
+        // 任务1：电机控制（10ms周期）
         if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_control_time).count() >= 10) 
         {
             bool jaw_changed=ros->get_jaw_cmd(jaw_cmd); 

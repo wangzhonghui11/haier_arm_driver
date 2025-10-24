@@ -23,18 +23,19 @@ namespace ambot_driver_ns
     class PrivateProtocolCLASS
     {
     private:
-
+        
 
     public:
         PrivateProtocolCLASS(/* args */);
         ~PrivateProtocolCLASS();
         uint8_t processFrame(const uint8_t* data, uint16_t length);
         uint8_t comm_frame_store(CommFrame* statusframGroup, const uint8_t* databuf);
-        void  updateDataConsumer();
         //void createCommandFrame(const uint8_t functionCode, const uint8_t commandNum, const protocolInputBuffer_TP& in, protocolOutputBuffer_TP &output);
         uint8_t comm_frame_upload(CommFrame* frame, uint8_t* output_buf) ;
         void lifterDateUpdate(std::vector<uint8_t> data, float& left_value, float& right_value);
         void jawMotorDateUpdate(std::vector<uint8_t> data, float& postion);
+        void yiyouMotorDateUpdate(std::vector<uint8_t> data, YiyouMecArm& mecarm); 
+        void updateDataConsumer(YiyouMecArm &mecarm,float &lifter_l_pos,float  &lifter_r_pos,float &jaw_pos);
     };
 
     /**  

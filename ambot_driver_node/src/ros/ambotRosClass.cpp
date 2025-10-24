@@ -9,6 +9,16 @@ namespace ambot_driver_ns
     *   Parameters:
     *   @return     none
     */
+   bimax_msgs::msg::MotorState createMotorState(int id = 0, float q = 0.0f, float dq = 0.0f, float ddq = 0.0f, float tau = 0.0f )
+    {
+        bimax_msgs::msg::MotorState m;
+        // m.id = id;
+        m.q = q;
+        m.dq = dq;
+        m.ddq = ddq;
+        m.tau = tau;
+        return m;
+    }
     RosClass::RosClass(int argc, char** argv, const std::string& node_name)
         : Node(node_name)
     {
@@ -271,15 +281,30 @@ namespace ambot_driver_ns
     
     if (queue_cv_.wait_for(lock, std::chrono::milliseconds(1), 
                          [this]{ return !command_queue_.empty(); }))
-    {
-        cmd = command_queue_.front();
-        command_queue_.pop();
-        return true;
+        {
+            cmd = command_queue_.front();
+            command_queue_.pop();
+            return true;
+        }
+        return false;
     }
-    return false;
+
+    void RosClass::robotFbValuePub(YiyouMecArm &mecarm,float &lef ,float &righ)
+    {
+    auto state_msg = bimax_msgs::msg::RobotState();
+    state_msg.motor_state.push_back(createMotorState(0, lef, 0, 0.0f, 0)); 
+    state_msg.motor_state.push_back(createMotorState(1, mecarm.pos_rad_motor1, mecarm.vel_rad_s_motor1, 0.0f, mecarm.torque_nm_motor1));
+    state_msg.motor_state.push_back(createMotorState(2, mecarm.pos_rad_motor2, mecarm.vel_rad_s_motor2, 0.0f, mecarm.torque_nm_motor2));  
+    state_msg.motor_state.push_back(createMotorState(3, 0, 0, 0.0f, 0)); 
+    state_msg.motor_state.push_back(createMotorState(4, righ, 0, 0.0f, 0)); 
+    state_msg.motor_state.push_back(createMotorState(5, mecarm.pos_rad_motor3, mecarm.vel_rad_s_motor3, 0.0f, mecarm.torque_nm_motor3));  
+    state_msg.motor_state.push_back(createMotorState(6, mecarm.pos_rad_motor4, mecarm.vel_rad_s_motor4, 0.0f, mecarm.torque_nm_motor4));
+    state_msg.motor_state.push_back(createMotorState(7, mecarm.pos_rad_motor5, mecarm.vel_rad_s_motor5, 0.0f, mecarm.torque_nm_motor5));  
+    state_pub_->publish(state_msg);
     }
 
 };
+
     /**  
     *   @brief      get ros handle
     *   Parameters:

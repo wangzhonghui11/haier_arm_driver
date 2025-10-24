@@ -8,7 +8,7 @@
 
 #ifndef __YANGTZE_ROBOT_HPP__
 #define __YANGTZE_ROBOT_HPP__
-
+#include <thread>
 #include <iostream>
 #include <vector>
 #include "unistd.h"
@@ -35,7 +35,7 @@
 #include "bimax_msgs/srv/catcher_control.hpp"
 #include "bimax_msgs/srv/mop_control.hpp"    
 namespace ambot_driver_ns{
-     #define LEN_MAX 4096
+     #define LEN_MAX 256
     typedef struct 
     {
         std::string robotType;
@@ -64,7 +64,10 @@ namespace ambot_driver_ns{
     public:
         bool threadStop;
         std::vector<std::string> robotType;
-
+        YiyouMecArm mecarm;
+        float lifter_l_pos;
+        float  lifter_r_pos;
+        float jaw_pos;
         AmbotDriverCLASS(RobotDriver_TP &input);
         ~AmbotDriverCLASS();
         /* open function */
