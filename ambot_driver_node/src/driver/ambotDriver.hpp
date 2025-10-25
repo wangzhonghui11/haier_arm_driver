@@ -24,51 +24,21 @@
 #include "protocolStruct.hpp"
 #include "privateProtocol.hpp"
 #include <chrono>
-#include "bimax_msgs/msg/motor_command.hpp"
-#include "bimax_msgs/msg/motor_state.hpp"
-#include "bimax_msgs/msg/robot_command.hpp"
-#include "bimax_msgs/msg/robot_state.hpp"
-#include "sensor_msgs/msg/joint_state.hpp"
-#include "std_msgs/msg/float32.hpp"
-#include "bimax_msgs/srv/led_control.hpp"  
-#include "bimax_msgs/srv/magnet_control.hpp"  
-#include "bimax_msgs/srv/catcher_control.hpp"
-#include "bimax_msgs/srv/mop_control.hpp"    
-namespace ambot_driver_ns{
-     #define LEN_MAX 256
-    typedef struct 
-    {
-        std::string robotType;
-        std::string motorDevName;
-        std::string sensorDevName;
-        unsigned int motorDevBaud;
-        unsigned int sensorDevBaud;
-        uint8_t jointMotorNum;
-        uint8_t wheelMotorNum;
-        uint8_t motorNum;
-        std::vector<uint8_t> motorControlMode;
-        std::vector<float> motorMaxAngle;
-        std::vector<float> motorMinAngle;
-        std::vector<float> motorVelocity;
-        std::vector<float> motorOffset;
-        std::vector<float> motorAxisDirection;
-        uint8_t forceDataNum;
-        uint8_t sensorNum;
-        uint16_t rosRate;
-        float   carMaxVel;
-        float   wheelRadius;
-    }RobotDriver_TP;
-
+#include "ambotRosClass.hpp"
+    
+namespace bimax_driver_ns{
+     #define LEN_MAX 25
     class AmbotDriverCLASS
     {
     public:
+
         bool threadStop;
         std::vector<std::string> robotType;
         YiyouMecArm mecarm;
         float lifter_l_pos;
         float  lifter_r_pos;
         float jaw_pos;
-        AmbotDriverCLASS(RobotDriver_TP &input);
+        AmbotDriverCLASS(const std::shared_ptr<RosClass>& ros);
         ~AmbotDriverCLASS();
         /* open function */
         bool initial(void);
@@ -79,9 +49,9 @@ namespace ambot_driver_ns{
         bool CommandServeCatcherProcess(uint8_t green,uint8_t yellow);
         bool CommandServeMopProcess(uint16_t mop_motor_pwm,uint8_t mop_state);
     private:
+        std::shared_ptr<bimax_driver_ns::RosClass> ros;
         void  floatToUint32(float input, uint8_t* des);
         PrivateProtocolCLASS *protocol;         //communication protocol instance
-        const RobotDriver_TP robotParams;       //the const input robot params
         void printByteStream(const uint8_t* data, ssize_t count);
         int motorFd, sensorFd;                  //low driver motor file ID and sensor ID
         pthread_t motorTid, sensorTid;          //motor read feedback thread ID and sensor read thread ID

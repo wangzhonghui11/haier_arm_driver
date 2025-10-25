@@ -30,10 +30,10 @@ class Robot
 {
     private:
         /* data */
-         ambot_driver_ns::RosClass *ros;
-         ambot_driver_ns::AmbotDriverCLASS* robotDriver;
-         std::array<float, 2> joint_data;
-         bimax_msgs::msg::RobotCommand CommandValues;
+        std::shared_ptr<bimax_driver_ns::RosClass> ros;
+        bimax_driver_ns::AmbotDriverCLASS* robotDriver;
+        std::array<float, 2> joint_data;
+        bimax_msgs::msg::RobotCommand CommandValues;
         std::vector<float> wheelVelCmd;
         std::thread spin_thread_;
         bool imuConnectFlag = false;
@@ -53,5 +53,6 @@ class Robot
         void runEnd(void);
         bool run(void);
         void setThreadRunFlag(void);
+        rclcpp::Logger get_logger(void) const;
 };
 #endif

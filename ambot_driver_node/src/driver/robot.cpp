@@ -14,7 +14,7 @@
 Robot::Robot(int argc, char** argv)
 {
     rclcpp::init(argc, argv);
-    ros = new ambot_driver_ns::RosClass(argc, argv,"ambot_driver_node");
+    ros = std::make_shared<bimax_driver_ns::RosClass>(argc, argv, "ambot_driver_node");
     spin_thread_ = std::thread([this]() {
     rclcpp::spin(ros->get_node_base_interface());});
 }
@@ -32,10 +32,13 @@ Robot::~Robot()
     if (spin_thread_.joinable()) {
         spin_thread_.join();
     }
-    delete ros;
     rclcpp::shutdown();
 }
 
+rclcpp::Logger Robot::get_logger(void) const
+{
+    return ros->get_logger();
+}
 /**  
 *   @brief      robot init function
     Parameters:
@@ -45,7 +48,7 @@ Robot::~Robot()
 bool Robot::init(void)
 {
     //1 init driver
-    robotDriver = new ambot_driver_ns::AmbotDriverCLASS(ros->robotFeatures);
+    robotDriver = new bimax_driver_ns::AmbotDriverCLASS(ros);
     if(robotDriver->initial())
         return true;
     else

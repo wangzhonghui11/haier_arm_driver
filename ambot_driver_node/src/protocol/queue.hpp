@@ -6,7 +6,7 @@
 #include "protocolStruct.hpp"
 using namespace std::chrono_literals;
 
-namespace ambot_driver_ns {
+namespace bimax_driver_ns {
 
 enum class DeviceType {
     MEC_ARM    = ID_MEC_ARM_UPLOAD,

@@ -12,7 +12,7 @@ void signalHandler(int signum)
 {
     myRobot->setThreadRunFlag();
     usleep(400000);
-    std::cout << COUT_RED << "Received signal: " << signum << ", robot drive program will exit()." << COUT_RESET << std::endl;
+    RCLCPP_INFO(myRobot->get_logger(), "Received signal: %d, robot drive program will exit().", signum);
     // 调用类的成员函数
     myRobot->runEnd();
     exit(0);

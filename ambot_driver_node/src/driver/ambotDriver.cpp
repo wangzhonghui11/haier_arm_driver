@@ -8,20 +8,18 @@
 
 #include "ambotDriver.hpp"
 
-namespace ambot_driver_ns{
+namespace bimax_driver_ns{
 
-    AmbotDriverCLASS::AmbotDriverCLASS(RobotDriver_TP &input) : robotParams(input)
+    AmbotDriverCLASS::AmbotDriverCLASS(const std::shared_ptr<RosClass>& ros) : ros(ros)
     {
-        protocol = new PrivateProtocolCLASS();
-
-
+        protocol = new PrivateProtocolCLASS(ros);
         robotType.push_back("ambot_N1");
         robotType.push_back("ambot_W1");
         robotType.push_back("ambot_P1");
         // 1.open device file
         motorFd = open("/dev/ttyUSB0", O_RDWR | O_NOCTTY );
         if (motorFd == -1) {
-            perror("Error opening motor serial port");
+            RCLCPP_ERROR(ros->get_logger(), "Failed to open motor serial port");
             // exit(0);
         }
         // 2.init serial config file
@@ -30,24 +28,24 @@ namespace ambot_driver_ns{
         // 3.1 get serial current feature and save to SerialPortSettings
         tcgetattr(motorFd, &SerialPortSettings);
         // 3.2 according baud to set the serial baudrate
-        if (robotParams.motorDevBaud == 115200)
+        if (ros->robotFeatures.motorDevBaud == 115200)
         {
-            std::cout  << "motor set baud:" << 115200  << std::endl;  
+            RCLCPP_ERROR(ros->get_logger(), "Failed to open motor serial port");
             cfsetispeed(&SerialPortSettings, B115200);
             cfsetospeed(&SerialPortSettings, B115200);
-        }else if (robotParams.motorDevBaud == 921600)
+        }else if (ros->robotFeatures.motorDevBaud == 921600)
         {
-            std::cout  << "motor set baud:" << 921600  << std::endl;
+            RCLCPP_ERROR(ros->get_logger(), "Failed to open motor serial port"); 
             cfsetispeed(&SerialPortSettings, B921600);
             cfsetospeed(&SerialPortSettings, B921600);
-        }else if (robotParams.motorDevBaud == 1000000)
+        }else if (ros->robotFeatures.motorDevBaud == 1000000)
         {
-            std::cout << "motor set baud:" << 1000000  << std::endl;
+            RCLCPP_ERROR(ros->get_logger(), "Failed to open motor serial port");
             cfsetispeed(&SerialPortSettings, B1000000);
             cfsetospeed(&SerialPortSettings, B1000000);
         }
         else{
-            std::cout << "motor set baud:" << 1000000  << std::endl;
+            RCLCPP_ERROR(ros->get_logger(), "Failed to open motor serial port");
             cfsetispeed(&SerialPortSettings, B1000000);
             cfsetospeed(&SerialPortSettings, B1000000);
         }
@@ -75,11 +73,11 @@ namespace ambot_driver_ns{
         // 3.5 Set the new attributes to the termios structure
         if((tcsetattr(motorFd, TCSANOW, &SerialPortSettings)) != 0) 
         {
-            std::cout << "ERROR in setting serial port attributes! for port " << robotParams.motorDevName.c_str() << std::endl;
+            RCLCPP_ERROR(ros->get_logger(), "Failed to set serial port attributes! for port: %s", ros->robotFeatures.motorDevName.c_str());
             sleep(1);
         }
         else
-            std::cout << "Port " << robotParams.motorDevName.c_str() << " open successfully!" << std::endl;
+            RCLCPP_INFO(ros->get_logger(), "Port %s open successfully", ros->robotFeatures.motorDevName.c_str());
     }
     
     AmbotDriverCLASS::~AmbotDriverCLASS()
@@ -104,9 +102,7 @@ namespace ambot_driver_ns{
     bool AmbotDriverCLASS::initial(void)
     {
         threadStop = false;
-        std::cout<< "\nRobot Type : " << robotParams.robotType  << std::endl;
-        printf("ready to init\n\n");
-
+        RCLCPP_INFO(ros->get_logger(), "Driver ready to init");
         createReceiveThread();
         return true;
     }
@@ -215,7 +211,7 @@ namespace ambot_driver_ns{
             // 4. if detect ctrl+C, current thread will exit 
             if (threadStop)
             {
-                printf("receive data thread exit!!\n");
+                RCLCPP_INFO(ros->get_logger(), "GetAllMotorStateFromMCU thread exit");
                 pthread_exit(NULL);
             }
             //100hz
@@ -227,7 +223,6 @@ namespace ambot_driver_ns{
                 #ifdef DEBUG_MODE
                 printByteStream(read_buffer, currentReadCount);
                 #endif
-                printByteStream(read_buffer, currentReadCount);
                 // 协议处理（自动包含帧格式打印）
              protocol->processFrame(read_buffer,currentReadCount); 
             } 
@@ -243,7 +238,7 @@ namespace ambot_driver_ns{
             std::this_thread::sleep_for(std::chrono::milliseconds(10));  // 20ms
            if (threadStop)
             {
-                printf("Proccess data thread exit!!\n");
+                RCLCPP_INFO(ros->get_logger(), "ProccessAllMotorStateFromMCU thread exit");
                 pthread_exit(NULL);
             }
             protocol->updateDataConsumer(mecarm,lifter_l_pos,lifter_r_pos,jaw_pos);
@@ -381,13 +376,7 @@ namespace ambot_driver_ns{
     bool AmbotDriverCLASS::setMotorLocomotionCommand(CommFrame* frame)
     {
         protocolOutputBuffer_TP sendBuff;
-        //update all motor command data
-        // uint8_t led[2]={0x2,0x2};
-        // cmdframLedSet.databuf=led;
         uint8_t cmdId=frame->cmd_ID;
-        //sendBuff.length = 10;
-        //uint8_t temp[] = {0xF0, 0xF0, 0x00, 0x01, 0x03, 0x08, 0x00, 0x00, 0x02, 0xf0};
-        //memcpy(sendBuff.buffer, temp, sendBuff.length);
         switch(cmdId)
         {
             case ID_CMD_TIME_SET://设置MCU时间
@@ -423,11 +412,11 @@ namespace ambot_driver_ns{
                     break;			
             }
         if(sendBuff.length != txPacket(sendBuff)){
-            std::cout<<"failed to send"<<std::endl;
+            RCLCPP_INFO(ros->get_logger(), "SetMotorLocomotionCommand failed to send");
             return false;
         }
         else{
-        std::cout<<"saccess to send"<<std::endl;
+            RCLCPP_INFO(ros->get_logger(), "SetMotorLocomotionCommand succeed to send");
         }
         // don't wait for set command response now 
         return true;

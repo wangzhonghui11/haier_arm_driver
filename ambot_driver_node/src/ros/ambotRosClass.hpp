@@ -6,16 +6,47 @@
 #include <string>
 #include <vector>
 #include <memory>
-
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/bool.hpp"
 #include "std_msgs/msg/float32_multi_array.hpp"
-#include "ambotDriver.hpp"
+#include "queue.hpp"
 #include <cassert>
-// #include "privateProtocol.hpp"
-
-namespace ambot_driver_ns
+#include "protocolStruct.hpp"
+#include "bimax_msgs/msg/motor_command.hpp"
+#include "bimax_msgs/msg/motor_state.hpp"
+#include "bimax_msgs/msg/robot_command.hpp"
+#include "bimax_msgs/msg/robot_state.hpp"
+#include "sensor_msgs/msg/joint_state.hpp"
+#include "std_msgs/msg/float32.hpp"
+#include "bimax_msgs/srv/led_control.hpp"  
+#include "bimax_msgs/srv/magnet_control.hpp"  
+#include "bimax_msgs/srv/catcher_control.hpp"
+#include "bimax_msgs/srv/mop_control.hpp"    
+namespace bimax_driver_ns
 {
+        typedef struct 
+    {
+        std::string robotType;
+        std::string motorDevName;
+        std::string sensorDevName;
+        unsigned int motorDevBaud;
+        unsigned int sensorDevBaud;
+        uint8_t jointMotorNum;
+        uint8_t wheelMotorNum;
+        uint8_t motorNum;
+        std::vector<uint8_t> motorControlMode;
+        std::vector<float> motorMaxAngle;
+        std::vector<float> motorMinAngle;
+        std::vector<float> motorVelocity;
+        std::vector<float> motorOffset;
+        std::vector<float> motorAxisDirection;
+        uint8_t forceDataNum;
+        uint8_t sensorNum;
+        uint16_t rosRate;
+        float   carMaxVel;
+        float   wheelRadius;
+    }RobotDriver_TP;
+
     using namespace std;
 
     class RosClass : public rclcpp::Node
@@ -25,28 +56,17 @@ namespace ambot_driver_ns
         bool terminate = false;
 
         /* all ros parameters server:robot params */
-        RobotDriver_TP robotFeatures;
-
         /* construct and deconstruct function */
         RosClass(int argc, char** argv, const std::string& node_name = "yangtze_node");
         ~RosClass();
-
+        RobotDriver_TP robotFeatures;
         /* open function api */
         bool init();
         void rosSleep();
 
-        /* open api for output command */
-        // void getWheelMotorCommand(std::vector<float> &out);
         bool getJointMotorCommand(bimax_msgs::msg::RobotCommand& msg);
-        // void robotFbValuePub(const ambot_msg::msg::AmbotState& data);
-        
-        /* other open function */
-        // void setTerminateValue();
         void getParameters(map<string, float>& robot_params, map<string, string>& robot_devices);
-        // template <typename T> void setSingleServerParameter(string robot_params, T setData);
-        // bool getSingleServerParameter(std::string paramName, int& getData);
-        // rclcpp::Node::SharedPtr getHandle();
-        // void topicFrequencyWarning(void);
+
         void jawCallback(const std_msgs::msg::Float32::SharedPtr msg) ;
         void commandCallback(const bimax_msgs::msg::RobotCommand::SharedPtr msg) ;
         bool get_green_state(uint8_t  &green_state_) ;
@@ -60,23 +80,12 @@ namespace ambot_driver_ns
         bool get_jaw_cmd(float  &jaw_cmd); 
         void robotFbValuePub(YiyouMecArm &mecarm,float &lef ,float &righ);
     private:
-        /* public topic */
-        // rclcpp::Publisher<ambot_msg::msg::AmbotState>::SharedPtr sensorValuePub;
         rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr terminateValuePub;
         std::queue<bimax_msgs::msg::RobotCommand> command_queue_;
         std::mutex queue_mutex_;
         std::condition_variable queue_cv_;
-        // /* subscribe topic */
-        // rclcpp::Subscription<ambot_msg::msg::AmbotCommand>::SharedPtr commandValueSub;
-        // rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr wheelCmdValueSub;
         rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr terminateValueSub;
 
-        // /* tf broadcaster */
-        // std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
-
-        // /* receive command buffer */
-        // ambot_msg::msg::AmbotCommand commandValues;
-        // std::vector<float> wheelCmd;
         float last_jaw_cmd_;
         float jaw_cmd_;
         uint8_t last_mop_state_;

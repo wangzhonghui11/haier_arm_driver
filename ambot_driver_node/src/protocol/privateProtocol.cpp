@@ -1,14 +1,10 @@
 /*  A class of private protocol between PC and MCU
-    *
-    * Author： chen chen
-    * Date: 2024-8-22
-    * Email: 1240563221@qq.com
-    *
+
 */
 
 #include "privateProtocol.hpp"
 
-namespace ambot_driver_ns
+namespace bimax_driver_ns
 {
         UnifiedDeviceQueue arm_queue; // 统一队列替换原有三个队列
         TimerHostComm Timer_HostComm = {};
@@ -196,7 +192,7 @@ namespace ambot_driver_ns
             &cmdframLedSet
         };    
 
-    PrivateProtocolCLASS::PrivateProtocolCLASS(/* args */)
+    PrivateProtocolCLASS::PrivateProtocolCLASS(const std::shared_ptr<RosClass>& ros) : ros(ros)
     {
 
         

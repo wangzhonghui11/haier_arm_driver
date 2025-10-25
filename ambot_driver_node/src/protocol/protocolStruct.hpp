@@ -11,7 +11,7 @@
 
 #include <iostream>
  //#define DEBUG_MODE 1
-namespace ambot_driver_ns
+namespace bimax_driver_ns
 {
     /*these macro for global use*/
 

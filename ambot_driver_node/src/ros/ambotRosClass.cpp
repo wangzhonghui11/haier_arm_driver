@@ -2,7 +2,7 @@
 #include <sys/time.h>
 #include <chrono>
 
-namespace ambot_driver_ns
+namespace bimax_driver_ns
 {
     /**  
     *   @brief      construct function of RosClass
@@ -50,9 +50,6 @@ namespace ambot_driver_ns
     {
         RCLCPP_INFO(this->get_logger(), "robot driver node just terminated!");
         
-        // Clear all resources
-        // robot_params.clear();
-        // robot_devices.clear();
     }
 
     /**  
