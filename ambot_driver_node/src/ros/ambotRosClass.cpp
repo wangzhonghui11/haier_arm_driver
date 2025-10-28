@@ -59,7 +59,7 @@ namespace bimax_driver_ns
     */
     void RosClass::rosSleep()
     {
-        rclcpp::sleep_for(std::chrono::milliseconds(1000 / 100));
+        rclcpp::sleep_for(std::chrono::milliseconds(1));
     }
     
     /**  
@@ -101,13 +101,13 @@ namespace bimax_driver_ns
 
         // 初始化服务
         service_mop = create_service<bimax_msgs::srv::MopControl>("mop_control",std::bind(&RosClass::mop_handle_request, this, std::placeholders::_1, std::placeholders::_2));
-        RCLCPP_INFO(get_logger(), "拖布控制服务已启动");
+        RCLCPP_INFO(get_logger(), "Mop control service init successful!");
         service_catcher = create_service<bimax_msgs::srv::CatcherControl>("catcher_control",std::bind(&RosClass::catcher_handle_request, this, std::placeholders::_1, std::placeholders::_2));
-        RCLCPP_INFO(get_logger(), "吸尘控制服务已启动");
+        RCLCPP_INFO(get_logger(), "Vacuum control service init successful!");
         service_led = create_service<bimax_msgs::srv::LedControl>("led_control",std::bind(&RosClass::led_handle_request, this, std::placeholders::_1, std::placeholders::_2));
-        RCLCPP_INFO(get_logger(), "LED控制服务已启动");
+        RCLCPP_INFO(get_logger(), "LED control service init successful!");
         service_magnet = create_service<bimax_msgs::srv::MagnetControl>("magnet_control",std::bind(&RosClass::magnet_handle_request, this, std::placeholders::_1, std::placeholders::_2));
-        RCLCPP_INFO(get_logger(), "磁铁控制服务已启动");
+        RCLCPP_INFO(get_logger(), "Magnet control service init successful!");
         // 状态发布
    
         state_pub_ = create_publisher<bimax_msgs::msg::RobotState>("/bimaxArmStateValues", 10);

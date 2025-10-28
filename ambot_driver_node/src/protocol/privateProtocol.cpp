@@ -70,7 +70,7 @@ namespace bimax_driver_ns
         LiftsSet dataLiftsSet = {};
         LedSet dataLedSet = {};
         Heartbeat dataHeartbeat = {};
-
+        MecArmMitSet dataArmMitset={};
         // 导航发送给MCU的帧结构初始化
         CommFrame cmdframTimeSet = {
             .head_H =FRAME_HEAD_H ,
@@ -143,6 +143,17 @@ namespace bimax_driver_ns
             .CRC_H = 0,
             .CRC_L = 0
         };
+        CommFrame cmdArmMitSet = {
+            .head_H =FRAME_HEAD_H ,
+            .head_L = FRAME_HEAD_L,
+            .frame_ID_H = 0,
+            .frame_ID_L = 0,
+            .length = 1 + DATA_LEGTH_MECARM_MIT_SET,
+            .cmd_ID =  ID_CMD_MECARM_MIT_SET,
+            .databuf = dataArmMitset.data,
+            .CRC_H = 0,
+            .CRC_L = 0
+        };
 
         CommFrame cmdframLiftsSet = {
             .head_H =FRAME_HEAD_H ,
@@ -181,7 +192,7 @@ namespace bimax_driver_ns
         // };
 
         // 命令帧组初始化
-        CommFrame* cmdframGroup[8] = {
+        CommFrame* cmdframGroup[9] = {
             &cmdframTimeSet,
             &cmdframMopSet,
             &cmdframJawSet,
@@ -189,13 +200,14 @@ namespace bimax_driver_ns
             &cmdframMagnetet,
             &cmdframMecArmSet,
             &cmdframLiftsSet,
-            &cmdframLedSet
+            &cmdframLedSet,
+            &cmdArmMitSet
         };    
 
     PrivateProtocolCLASS::PrivateProtocolCLASS(const std::shared_ptr<RosClass>& ros) : ros(ros)
     {
 
-        
+         RCLCPP_INFO(ros->get_logger(), "PrivateProtocolCLASS Interface init successfully!"); 
         // motorLimit = {4*MY_PI, -4*MY_PI, 30, -30, 12, -12, 500., 0, 5., 0};
     }
     
@@ -236,7 +248,6 @@ namespace bimax_driver_ns
                         statusframGroup[ID_LIFTS_STORE]->print();                      
                         #endif                             
                         break;
-                        
                     case ID_JAW_MOTOR_UPLOAD:
                         type = DeviceType::JAW_MOTOR;
                         store_length = comm_frame_store(statusframGroup[ID_JAW_MOTOR_STORE], &data[i]);
@@ -280,7 +291,7 @@ namespace bimax_driver_ns
     {
         // 检查数据大小是否足够（至少需要 15个float × 4字节 + 10个uint16_t × 2字节 = 80字节）
         if (data.size() < 84) {
-            std::cerr << "Error: data size too small!" << std::endl;
+            RCLCPP_WARN(ros->get_logger(), "yiyouMotorDateUpdate date size <84!"); 
             return;
         }
 
@@ -373,8 +384,6 @@ namespace bimax_driver_ns
         
          statusframGroup->CRC_H = databuf[6 + data_length + 0];
          statusframGroup->CRC_L = databuf[6 + data_length + 1];  
-        // std::cout << "CRC_H"<<std::hex << (int)databuf[6 + data_length + 0]<<std::endl;
-        // std::cout << "CRC_L"<<std::hex << (int)databuf[6 + data_length + 1]<<std::endl;
         uint16_t crc_rslt =  usMBCRC16(const_cast<uint8_t*>(&databuf[5]), (data_length + 1));
         
         if(((statusframGroup->CRC_H << 8) | (statusframGroup->CRC_L)) == crc_rslt)
@@ -400,6 +409,7 @@ namespace bimax_driver_ns
     uint8_t PrivateProtocolCLASS::comm_frame_upload(CommFrame* frame, uint8_t* output_buf) {
         // 参数检查
         if (!frame || !frame->databuf || !output_buf || frame->length < 1 || frame->length > 256) {
+            RCLCPP_WARN(ros->get_logger(), "comm_frame_upload frame is warnning!");    
             return 0;  // 或抛出异常
         }
 
@@ -432,10 +442,14 @@ namespace bimax_driver_ns
         memcpy(output_buf + 6 + data_length, &frame->CRC_H, 1);     // CRC高字节
         memcpy(output_buf + 6 + data_length + 1, &frame->CRC_L, 1); // CRC低字节
         size_t total_bytes=6 + data_length + 2;
+        // Build hex string for logging
+        std::stringstream hex_stream;
         for (size_t i = 0; i < total_bytes; i++) {
-            std::cout << std::hex << std::setw(2) << std::setfill('0') 
+            hex_stream << std::hex << std::setw(2) << std::setfill('0') 
                     << static_cast<int>(output_buf[i]) << " ";
         }
+
+        RCLCPP_INFO(ros->get_logger(), "Output frame: %s", hex_stream.str().c_str());
         return total_bytes; 
     }
     // void PrivateProtocolCLASS::createCommandFrame(const uint8_t functionCode, const uint8_t commandNum, const protocolInputBuffer_TP& in, protocolOutputBuffer_TP &output)

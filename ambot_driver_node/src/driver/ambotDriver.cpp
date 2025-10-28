@@ -30,22 +30,22 @@ namespace bimax_driver_ns{
         // 3.2 according baud to set the serial baudrate
         if (ros->robotFeatures.motorDevBaud == 115200)
         {
-            RCLCPP_ERROR(ros->get_logger(), "Failed to open motor serial port");
+            RCLCPP_INFO(ros->get_logger(), "set baud: 115200 successfully!");
             cfsetispeed(&SerialPortSettings, B115200);
             cfsetospeed(&SerialPortSettings, B115200);
         }else if (ros->robotFeatures.motorDevBaud == 921600)
         {
-            RCLCPP_ERROR(ros->get_logger(), "Failed to open motor serial port"); 
+            RCLCPP_INFO(ros->get_logger(), "set baud: 921600 successfully!");
             cfsetispeed(&SerialPortSettings, B921600);
             cfsetospeed(&SerialPortSettings, B921600);
         }else if (ros->robotFeatures.motorDevBaud == 1000000)
         {
-            RCLCPP_ERROR(ros->get_logger(), "Failed to open motor serial port");
+            RCLCPP_INFO(ros->get_logger(), "set baud: 1000000 successfully!");
             cfsetispeed(&SerialPortSettings, B1000000);
             cfsetospeed(&SerialPortSettings, B1000000);
         }
         else{
-            RCLCPP_ERROR(ros->get_logger(), "Failed to open motor serial port");
+            RCLCPP_INFO(ros->get_logger(), "set baud: 1000000 successfully!");
             cfsetispeed(&SerialPortSettings, B1000000);
             cfsetospeed(&SerialPortSettings, B1000000);
         }
@@ -64,8 +64,8 @@ namespace bimax_driver_ns{
         SerialPortSettings.c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL); // Disable any special handling of received bytes
         SerialPortSettings.c_oflag &= ~OPOST;       // Prevent special interpretation of output bytes (e.g. newline chars)
         SerialPortSettings.c_oflag &= ~ONLCR;       // Prevent conversion of newline to carriage return/line feed
-        SerialPortSettings.c_cc[VTIME] = 5;         // timeout set, unit 1/10s, if set zero, will return right now 
-        SerialPortSettings.c_cc[VMIN] = 1;        // wait for enough data to read, if set zero, data will read right now
+        SerialPortSettings.c_cc[VTIME] = 0;         // timeout set, unit 1/10s, if set zero, will return right now 
+        SerialPortSettings.c_cc[VMIN] = 0;        // wait for enough data to read, if set zero, data will read right now
         // 3.4 Enable linux FTDI low latency mode
         ioctl(motorFd, TIOCGSERIAL, &ser_info);
         ser_info.flags |= ASYNC_LOW_LATENCY;
@@ -215,7 +215,7 @@ namespace bimax_driver_ns{
                 pthread_exit(NULL);
             }
             //100hz
-            std::this_thread::sleep_for(std::chrono::milliseconds(30));  // 20ms
+            std::this_thread::sleep_for(std::chrono::milliseconds(15));  // 20ms
         //    currentReadCount=printReceivedDataWithFrequency(motorFd);
             currentReadCount = read(motorFd, read_buffer,LEN_MAX);
             if (currentReadCount > 0) {
@@ -223,9 +223,11 @@ namespace bimax_driver_ns{
                 #ifdef DEBUG_MODE
                 printByteStream(read_buffer, currentReadCount);
                 #endif
-                // 协议处理（自动包含帧格式打印）
              protocol->processFrame(read_buffer,currentReadCount); 
             } 
+            // else{
+            //     RCLCPP_ERROR(ros->get_logger(), "MUC uart date is update failed!");
+            // }
         }
         
     }
@@ -235,7 +237,7 @@ namespace bimax_driver_ns{
        {
 
            //50hz
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));  // 20ms
+            std::this_thread::sleep_for(std::chrono::milliseconds(7));  // 20ms
            if (threadStop)
             {
                 RCLCPP_INFO(ros->get_logger(), "ProccessAllMotorStateFromMCU thread exit");
@@ -293,13 +295,13 @@ namespace bimax_driver_ns{
 
     }
     bool AmbotDriverCLASS::YiyouMotorprocess(bimax_msgs::msg::RobotCommand& cmd) {
+    if(cmd.motor_command[1].mode==0||cmd.motor_command[1].mode==1){    
         uint8_t databuf[28] = {0};  // 初始化全0
-
         // 1. 保留前3字节（reserver1 + reserver2）
         databuf[0] = 0;  // reserver1的低字节
         databuf[1] = 0;  // reserver1的高字节
         databuf[2] = 0;  // reserver2
-
+        std::cout << "cmd.motor_command[1].q = " << cmd.motor_command[1].q << std::endl;
         // 2. 存储 Motor_Control_Mode（第4字节）
         databuf[3] = static_cast<uint8_t>(cmd.motor_command[1].mode);
 
@@ -318,18 +320,39 @@ namespace bimax_driver_ns{
                 memcpy(databuf + offsets[i], converter.b, 4);
             }
         }
-
-        // 4. 调试输出（十六进制）
-        std::cout << "databuf (hex): ";
-        for (int i = 0; i < 28; i++) {
-            std::cout << std::hex << std::setw(2) << std::setfill('0') 
-                    << static_cast<int>(databuf[i]) << " ";
-        }
-        std::cout << std::dec << std::endl;
-
         // 5. 提交命令
         memcpy(cmdframMecArmSet.databuf, databuf, sizeof(databuf));
         return setMotorLocomotionCommand(cmdframGroup[STORE_NUM_MECARM_SET]);
+    }
+    else if(cmd.motor_command[1].mode == 3) {
+        // 处理模式3（完整控制模式）
+        MecArmMitSet command = {0};
+        
+        // 填充保留字段
+        command.real.reserver1 = 0;
+        command.real.reserver2 = 0;
+        
+        // 设置控制模式
+        command.real.Motor_Control_Mode = static_cast<uint8_t>(cmd.motor_command[1].mode);
+        
+        // 填充电机1数据
+        command.real.cmd_pos1 = cmd.motor_command[1].q;
+        command.real.cmd_vel1 = cmd.motor_command[1].dq;    // 假设qd是速度
+        command.real.cmd_torque1 = cmd.motor_command[1].tau; // 假设tau是扭矩
+        command.real.kp1 = cmd.motor_command[1].kp;         // 假设kp是比例增益
+        command.real.kd1 = cmd.motor_command[1].kd;         // 假设kd是微分增益
+        
+        // 填充电机2数据
+        command.real.cmd_pos2 = cmd.motor_command[2].q;
+        command.real.cmd_vel2 = cmd.motor_command[2].dq;
+        command.real.cmd_torque2 = cmd.motor_command[2].tau;
+        command.real.kp2 = cmd.motor_command[2].kp;
+        command.real.kd2 = cmd.motor_command[2].kd;
+        
+        // 提交命令 - 注意这里需要确保cmdframMecArmSet.databuf足够大(至少44字节)
+        memcpy(cmdArmMitSet.databuf, command.data, sizeof(command.data));
+        return setMotorLocomotionCommand(cmdframGroup[STROE_NUM_ARM_MIT_SET]);
+    }   
     }
     bool AmbotDriverCLASS::JawCommandProcess(float pos)
     {
@@ -340,7 +363,7 @@ namespace bimax_driver_ns{
     }
     bool AmbotDriverCLASS::CommandFrameProcess(bimax_msgs::msg::RobotCommand& cmd)
     {
-        //LifterMotorprocess(cmd);
+        LifterMotorprocess(cmd);
         YiyouMotorprocess(cmd);
         return true;
     }
@@ -381,42 +404,38 @@ namespace bimax_driver_ns{
         {
             case ID_CMD_TIME_SET://设置MCU时间
                 sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STORE_NUM_TIME_SET],sendBuff.buffer);	
-                    break;
-
+                break;
             case ID_CMD_MOP_SET://拖布电机控制
-                sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STORE_NUM_MOP_SET],sendBuff.buffer);	
-                    break; 
-
+                sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STORE_NUM_MOP_SET],sendBuff.buffer);
+                break;
             case ID_CMD_JAW_SET://夹爪电机控制
                 sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STORE_NUM_JAW_SET],sendBuff.buffer);	
-                    break;
-
+                break;
             case ID_CMD_CATCHER_SET://吸尘电机控制
-                sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STORE_NUM_CATCHER_SET],sendBuff.buffer);					 
-                    break;
-                    
+                sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STORE_NUM_CATCHER_SET],sendBuff.buffer);
+                break;					 
             case ID_CMD_MAGNET_SET: //磁铁控制
                 sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STORE_NUM_MAGNET_SET],sendBuff.buffer);			
-                    break;
-            
+                break;
             case ID_CMD_MECARM_SET://机械臂控制	
-                sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STORE_NUM_MECARM_SET],sendBuff.buffer);			
-                    break;         
+                sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STORE_NUM_MECARM_SET],sendBuff.buffer);	
+                break;		      
             case ID_CMD_LIFTS_SET://升降电机控制
-                sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STORE_NUM_LIFTS_SET],sendBuff.buffer);			
-                    break; 
+                sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STORE_NUM_LIFTS_SET],sendBuff.buffer);	
+                break;		
             case ID_CMD_LED_SET: //LED灯控制
-                 sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STROE_NUM_LED_SET],sendBuff.buffer);			 
-                    break;
-            case ID_CMD_HEARTBEAT:
-                    break;			
+                 sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STROE_NUM_LED_SET],sendBuff.buffer);	
+                break;		 
+            case ID_CMD_MECARM_MIT_SET:
+                  sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STROE_NUM_ARM_MIT_SET],sendBuff.buffer);	   
+                break;        		
             }
         if(sendBuff.length != txPacket(sendBuff)){
-            RCLCPP_INFO(ros->get_logger(), "SetMotorLocomotionCommand failed to send");
+            RCLCPP_ERROR(ros->get_logger(), "SetMotorLocomotionCommand failed to send");
             return false;
         }
         else{
-            RCLCPP_INFO(ros->get_logger(), "SetMotorLocomotionCommand succeed to send");
+            RCLCPP_DEBUG(ros->get_logger(), "SetMotorLocomotionCommand succeed to send");
         }
         // don't wait for set command response now 
         return true;

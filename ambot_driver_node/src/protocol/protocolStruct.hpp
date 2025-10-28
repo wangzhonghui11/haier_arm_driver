@@ -49,6 +49,7 @@ namespace bimax_driver_ns
     #define ID_CMD_LIFTS_SET       0x07
     #define ID_CMD_LED_SET         0x08
     #define ID_CMD_HEARTBEAT       0x09
+    #define ID_CMD_MECARM_MIT_SET      0x10
     /*---------------------------------------------*/
     #define  STORE_NUM_TIME_SET       0
     #define  STORE_NUM_MOP_SET        1
@@ -58,6 +59,7 @@ namespace bimax_driver_ns
     #define  STORE_NUM_MECARM_SET     5
     #define  STORE_NUM_LIFTS_SET      6
     #define  STROE_NUM_LED_SET        7
+    #define  STROE_NUM_ARM_MIT_SET    8  
     /*---------------------------------------------*/
     #define DATA_LEGTH_TIME_SET        8
     #define DATA_LEGTH_MOP_SET         3
@@ -68,7 +70,7 @@ namespace bimax_driver_ns
     #define DATA_LEGTH_LIFTS_SET       8
     #define DATA_LEGTH_LED_SET         2
     #define DATA_LEGTH_HEARTBEAT       0
-
+    #define DATA_LEGTH_MECARM_MIT_SET      44
     // MCU send mesg frame to Navigation --------
     #define ID_MEC_ARM_UPLOAD        0x11
     #define ID_LIFTS_UPLOAD          0x12
@@ -179,7 +181,27 @@ namespace bimax_driver_ns
                 uint8_t data[28];
             };
         };
-
+        struct MecArmMitSet {
+            union {
+                struct {
+                uint16_t  reserver1;
+                uint8_t   reserver2;   
+                uint8_t   Motor_Control_Mode;     
+                float     cmd_pos1; 
+                float     cmd_vel1; 
+                float     cmd_torque1;   
+                float     kp1;  
+                float     kd1;
+                
+                float     cmd_pos2; 
+                float     cmd_vel2; 
+                float     cmd_torque2;   
+                float     kp2;  
+                float     kd2;
+                } real;
+                uint8_t data[44];
+            };
+        };
         // 升降机构设置数据结构
         struct LiftsSet {
             union {
@@ -268,14 +290,14 @@ namespace bimax_driver_ns
             float      vel_rad_s_motor2; 
             float      torque_nm_motor2; 			
             uint16_t   status_motor2;     
-            uint16_t   error_motor2;     
-                
+            uint16_t   error_motor2;   
+                             
             float      pos_rad_motor3;
             float      vel_rad_s_motor3;
             float      torque_nm_motor3; 	
             uint16_t   status_motor3;    
             uint16_t   error_motor3;     		
-                
+             
             float      pos_rad_motor4; 
             float      vel_rad_s_motor4;
             float      torque_nm_motor4; 	
@@ -370,7 +392,7 @@ namespace bimax_driver_ns
     extern LiftsSet dataLiftsSet;
     extern LedSet dataLedSet;
     extern Heartbeat dataHeartbeat;
-
+    extern MecArmMitSet dataArmMitset;
     // ----------- orin->MCU的通信帧 -----------
     extern CommFrame cmdframTimeSet;
     extern CommFrame cmdframMopSet;
@@ -380,10 +402,11 @@ namespace bimax_driver_ns
     extern CommFrame cmdframMecArmSet;
     extern CommFrame cmdframLiftsSet;
     extern CommFrame cmdframLedSet;
+    extern CommFrame cmdArmMitSet;
     // extern CommFrame cmdframHeartbeat;
     extern void  initializeFrames();
     // ----------- 命令帧组 -----------
-    extern CommFrame* cmdframGroup[8];
+    extern CommFrame* cmdframGroup[9];
     extern CommFrame* statusframGroup[3];  
 
     }

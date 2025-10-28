@@ -90,7 +90,7 @@ bool Robot::run(void)
             last_states_time=now;
         }
         // 任务1：电机控制（10ms周期）
-        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_control_time).count() >= 10) 
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_control_time).count() >= 5) 
         {
             bool jaw_changed=ros->get_jaw_cmd(jaw_cmd); 
             if(ros->getJointMotorCommand(CommandValues)) 
@@ -105,7 +105,7 @@ bool Robot::run(void)
         }
 
         // 任务2：LED控制（100ms周期） 
-        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_tools_time).count() >= 100) 
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_tools_time).count() >= 200) 
         {
             bool green_changed = ros->get_green_state(rad_led);
             bool yellow_changed = ros->get_yellow_state(yellow_led);
@@ -120,11 +120,11 @@ bool Robot::run(void)
            {
                 robotDriver->CommandServeMagnetProcess(left_magnet_state, right_magnet_state);
             }
-            if(green_changed||yellow_changed)
-            {
+            // if(green_changed||yellow_changed)
+            // {
 
-                robotDriver->CommandServeLedProcess(rad_led, yellow_led);
-            }
+            //     robotDriver->CommandServeLedProcess(rad_led, yellow_led);
+            // }
             if(catcher_gear_changed||catcher_state_changed)
             {
 

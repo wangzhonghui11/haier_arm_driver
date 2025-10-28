@@ -27,7 +27,7 @@
 #include "ambotRosClass.hpp"
     
 namespace bimax_driver_ns{
-     #define LEN_MAX 25
+     #define LEN_MAX 255
     class AmbotDriverCLASS
     {
     public:
