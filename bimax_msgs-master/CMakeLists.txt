@@ -39,6 +39,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/RobotCommand.msg"
   "msg/RobotState.msg"
   "msg/Performance.msg"
+  "msg/MotorError.msg" 
   "action/BimaxFunction.action"
   "srv/LedControl.srv"
   "srv/MagnetControl.srv" 

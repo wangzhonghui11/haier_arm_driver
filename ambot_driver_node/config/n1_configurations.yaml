@@ -1,12 +1,12 @@
-ambot_driver_node:
+bimax_driver_node:
   ros__parameters:
-    ambot_type: "ambot_W1"
+    bimax_type: "bimax_W1"
     
-    ambot_devices:
+    bimax_devices:
       motor_device: "/dev/ttyUSB0"
       # sensor_device: "/dev/SENSOR_MCU"
     
-    ambot_params:  
+    bimax_params:  
       motor_baud: 1000000
       joint_motor_num: 12
       wheel_motor_num: 0
@@ -14,8 +14,20 @@ ambot_driver_node:
       ros_rate: 100
       car_max_vel: 0.2
       wheel_radius: 0.06
+
+    bimax_server:
+      mop_service_name: "mop_control"
+      catcher_service_name: "catcher_control"
+      led_service_name: "led_control" 
+      magnet_service_name: "magnet_control"
+
+    bimax_topic:
+      motor_command_topic: "/bimaxArmCommandValues"
+      gripper_position_topic: "/gripper_position"
+      motor_error_topic: "/bimax_motor_error"
+      motor_states_topic: "/bimaxArmStateValues"
     
-    ambot_const_params:
+    bimax_const_params:
       motor_control_mode: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
       motor_max_angle: [1.57, 1.57, 1.57, 1.57, 1.57, 1.57, 1.57, 1.57, 1.57, 1.57, 1.57, 1.57]
       motor_min_angle: [-1.57, -1.57, -1.57, -1.57, -1.57, -1.57, -1.57, -1.57, -1.57, -1.57, -1.57, -1.57]

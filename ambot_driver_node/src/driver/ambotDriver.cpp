@@ -28,24 +28,24 @@ namespace bimax_driver_ns{
         // 3.1 get serial current feature and save to SerialPortSettings
         tcgetattr(motorFd, &SerialPortSettings);
         // 3.2 according baud to set the serial baudrate
-        if (ros->robotFeatures.motorDevBaud == 115200)
+        if (ros->motor_baud == 115200)
         {
             RCLCPP_INFO(ros->get_logger(), "set baud: 115200 successfully!");
             cfsetispeed(&SerialPortSettings, B115200);
             cfsetospeed(&SerialPortSettings, B115200);
-        }else if (ros->robotFeatures.motorDevBaud == 921600)
+        }else if (ros->motor_baud == 921600)
         {
             RCLCPP_INFO(ros->get_logger(), "set baud: 921600 successfully!");
             cfsetispeed(&SerialPortSettings, B921600);
             cfsetospeed(&SerialPortSettings, B921600);
-        }else if (ros->robotFeatures.motorDevBaud == 1000000)
+        }else if (ros->motor_baud== 1000000)
         {
             RCLCPP_INFO(ros->get_logger(), "set baud: 1000000 successfully!");
             cfsetispeed(&SerialPortSettings, B1000000);
             cfsetospeed(&SerialPortSettings, B1000000);
         }
         else{
-            RCLCPP_INFO(ros->get_logger(), "set baud: 1000000 successfully!");
+            RCLCPP_INFO(ros->get_logger(), "set defalut baud: 1000000 successfully!");
             cfsetispeed(&SerialPortSettings, B1000000);
             cfsetospeed(&SerialPortSettings, B1000000);
         }
@@ -150,7 +150,7 @@ namespace bimax_driver_ns{
             std::cout << std::dec << "\n\n";
             return currentReadCount;
         }
-}
+    }
 
     void AmbotDriverCLASS::printByteStream(const uint8_t* data, ssize_t count) {
             // 调试控制参数
@@ -233,18 +233,62 @@ namespace bimax_driver_ns{
     }
 
     void AmbotDriverCLASS::ProccessAllMotorStateFromMCU(void){
+        static auto last_states_time = std::chrono::steady_clock::now();
         for(;;)
        {
 
            //50hz
-            std::this_thread::sleep_for(std::chrono::milliseconds(7));  // 20ms
+
            if (threadStop)
             {
                 RCLCPP_INFO(ros->get_logger(), "ProccessAllMotorStateFromMCU thread exit");
                 pthread_exit(NULL);
             }
             protocol->updateDataConsumer(mecarm,lifter_l_pos,lifter_r_pos,jaw_pos);
+
+            auto now = std::chrono::steady_clock::now();
+            if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_states_time).count() >= 1000) 
+            {
+
+                checkToMotorStates(mecarm);
+                last_states_time=now;
+            }
+            
+            std::this_thread::sleep_for(std::chrono::milliseconds(7));  // 20ms
        }
+    }
+    void AmbotDriverCLASS::checkToMotorStates(YiyouMecArm &mecarm)
+    {
+        if(mecarm.status_motor1==255)
+        {
+            RCLCPP_WARN(ros->get_logger(), "Motor1 find failed,plase check motor_power!");
+        }
+        if(mecarm.status_motor2==255)
+        {
+            RCLCPP_WARN(ros->get_logger(), "Motor2 find failed,plase check motor_power!");
+        }
+        if(mecarm.status_motor3==255)
+        {
+            RCLCPP_WARN(ros->get_logger(), "Motor4 find failed,plase check motor_power!");
+        }
+        if(mecarm.status_motor4==255)
+        {
+            RCLCPP_WARN(ros->get_logger(), "Motor5 find failed,plase check motor_power!");
+        }
+        if(mecarm.status_motor5==255)
+        {
+            RCLCPP_WARN(ros->get_logger(), "Motor6 find failed,plase check motor_power!");
+        }
+
+        if(mecarm.error_motor1==34321)
+        {
+            RCLCPP_WARN(ros->get_logger(), "Motor1 pos error very big ,plase clean error!");
+        }
+        if(mecarm.status_motor2==34321)
+        {
+            RCLCPP_WARN(ros->get_logger(), "Motor2 pos error very big ,plase clean error!");
+        }
+
     }
     void AmbotDriverCLASS::floatToUint32(float input, uint8_t* des) {
         uint32_t bits;
@@ -302,6 +346,8 @@ namespace bimax_driver_ns{
         databuf[1] = 0;  // reserver1的高字节
         databuf[2] = 0;  // reserver2
         std::cout << "cmd.motor_command[1].q = " << cmd.motor_command[1].q << std::endl;
+        std::cout << "cmd.motor_command[2].q = " << cmd.motor_command[2].q << std::endl;
+        // 2. 存储 Motor_Control_Mode（第4字节）
         // 2. 存储 Motor_Control_Mode（第4字节）
         databuf[3] = static_cast<uint8_t>(cmd.motor_command[1].mode);
 
@@ -363,9 +409,21 @@ namespace bimax_driver_ns{
     }
     bool AmbotDriverCLASS::CommandFrameProcess(bimax_msgs::msg::RobotCommand& cmd)
     {
-        LifterMotorprocess(cmd);
+        static int lifter_counter = 0;
+        static int lifter_threshold = 2;  // Lifter累计2次执行
+        
+        // LifterMotorprocess：累计2次执行一次
+        lifter_counter++;
+        if (lifter_counter >= lifter_threshold) {
+            LifterMotorprocess(cmd);
+            lifter_counter = 0;  // 重置计数器
+        }
+        
+        // YiyouMotorprocess：每次调用都执行
         YiyouMotorprocess(cmd);
-        return true;
+        
+        return true;        
+
     }
     bool AmbotDriverCLASS::CommandServeLedProcess(uint8_t green,uint8_t yellow)
     {
@@ -427,7 +485,7 @@ namespace bimax_driver_ns{
                  sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STROE_NUM_LED_SET],sendBuff.buffer);	
                 break;		 
             case ID_CMD_MECARM_MIT_SET:
-                  sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STROE_NUM_ARM_MIT_SET],sendBuff.buffer);	   
+                 sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STROE_NUM_ARM_MIT_SET],sendBuff.buffer);	   
                 break;        		
             }
         if(sendBuff.length != txPacket(sendBuff)){

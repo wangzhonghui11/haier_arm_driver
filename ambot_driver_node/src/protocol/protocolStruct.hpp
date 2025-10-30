@@ -49,7 +49,7 @@ namespace bimax_driver_ns
     #define ID_CMD_LIFTS_SET       0x07
     #define ID_CMD_LED_SET         0x08
     #define ID_CMD_HEARTBEAT       0x09
-    #define ID_CMD_MECARM_MIT_SET      0x10
+    #define ID_CMD_MECARM_MIT_SET  0x10
     /*---------------------------------------------*/
     #define  STORE_NUM_TIME_SET       0
     #define  STORE_NUM_MOP_SET        1
@@ -70,7 +70,7 @@ namespace bimax_driver_ns
     #define DATA_LEGTH_LIFTS_SET       8
     #define DATA_LEGTH_LED_SET         2
     #define DATA_LEGTH_HEARTBEAT       0
-    #define DATA_LEGTH_MECARM_MIT_SET      44
+    #define DATA_LEGTH_MECARM_MIT_SET  44
     // MCU send mesg frame to Navigation --------
     #define ID_MEC_ARM_UPLOAD        0x11
     #define ID_LIFTS_UPLOAD          0x12
@@ -171,12 +171,12 @@ namespace bimax_driver_ns
                 uint16_t     reserver1;
                 uint8_t      reserver2;   
                 uint8_t      Motor_Control_Mode;     
-                uint32_t     position_motor1;   // 
-                uint32_t     position_motor2;   //
-                uint32_t     position_motor3;   //
-                uint32_t     position_motor4;   //
-                uint32_t     position_motor5;   //
-                uint32_t     position_motor6;   //
+                float        position_motor1;   // 
+                float        position_motor2;   //
+                float        position_motor3;   //
+                float        position_motor4;   //
+                float        position_motor5;   //
+                float        position_motor6;   //
                 } real;
                 uint8_t data[28];
             };

@@ -17,6 +17,7 @@
 #include "bimax_msgs/msg/robot_command.hpp"
 #include "bimax_msgs/msg/robot_state.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
+#include "bimax_msgs/msg/motor_error.hpp"
 #include "std_msgs/msg/float32.hpp"
 #include "bimax_msgs/srv/led_control.hpp"  
 #include "bimax_msgs/srv/magnet_control.hpp"  
@@ -78,7 +79,10 @@ namespace bimax_driver_ns
         bool get_mop_state(uint8_t  &mop_state) ;
         bool get_mop_motor_pwm_state(uint16_t  &mop_motor_pwm_state);
         bool get_jaw_cmd(float  &jaw_cmd); 
-        void robotFbValuePub(YiyouMecArm &mecarm,float &lef ,float &righ);
+        void robotFbValuePub(YiyouMecArm &mecarm,float &lef ,float &righ,float &jaw_pos);
+
+        std::string motor_device;
+        int motor_baud;
     private:
         rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr terminateValuePub;
         std::queue<bimax_msgs::msg::RobotCommand> command_queue_;
@@ -108,6 +112,8 @@ namespace bimax_driver_ns
         // /* robot ros parameter server */
         std::map<string, float> robot_params;
         std::map<string, string> robot_devices;
+
+
         rclcpp::Service<bimax_msgs::srv::MopControl>::SharedPtr service_mop;
         rclcpp::Service<bimax_msgs::srv::LedControl>::SharedPtr service_led;
         rclcpp::Service<bimax_msgs::srv::MagnetControl>::SharedPtr service_magnet;
@@ -117,6 +123,8 @@ namespace bimax_driver_ns
         rclcpp::Subscription<bimax_msgs::msg::RobotCommand>::SharedPtr cmd_sub_;
         rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr jaw_sub;
         rclcpp::Publisher<bimax_msgs::msg::RobotState>::SharedPtr state_pub_;
+        rclcpp::Publisher<bimax_msgs::msg::MotorError>::SharedPtr motor_error_pub_;
+        rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr jaw_pub_;
         bimax_msgs::msg::RobotCommand CommandValues;
         void led_handle_request(const std::shared_ptr<bimax_msgs::srv::LedControl::Request> request,std::shared_ptr<bimax_msgs::srv::LedControl::Response> response);
         void magnet_handle_request(const std::shared_ptr<bimax_msgs::srv::MagnetControl::Request> request,std::shared_ptr<bimax_msgs::srv::MagnetControl::Response> response);

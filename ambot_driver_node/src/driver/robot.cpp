@@ -86,11 +86,11 @@ bool Robot::run(void)
         // 任务0：电机反馈（20ms周期）
         if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_states_time).count() >= 20) 
         {
-            ros->robotFbValuePub(robotDriver->mecarm,robotDriver->lifter_l_pos,robotDriver->lifter_r_pos);
+            ros->robotFbValuePub(robotDriver->mecarm,robotDriver->lifter_l_pos,robotDriver->lifter_r_pos,robotDriver->jaw_pos);
             last_states_time=now;
         }
         // 任务1：电机控制（10ms周期）
-        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_control_time).count() >= 5) 
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_control_time).count() >= 10) 
         {
             bool jaw_changed=ros->get_jaw_cmd(jaw_cmd); 
             if(ros->getJointMotorCommand(CommandValues)) 
@@ -120,11 +120,11 @@ bool Robot::run(void)
            {
                 robotDriver->CommandServeMagnetProcess(left_magnet_state, right_magnet_state);
             }
-            // if(green_changed||yellow_changed)
-            // {
+            if(green_changed||yellow_changed)
+            {
 
-            //     robotDriver->CommandServeLedProcess(rad_led, yellow_led);
-            // }
+                robotDriver->CommandServeLedProcess(rad_led, yellow_led);
+            }
             if(catcher_gear_changed||catcher_state_changed)
             {
 

@@ -22,9 +22,6 @@ namespace bimax_driver_ns
     RosClass::RosClass(int argc, char** argv, const std::string& node_name)
         : Node(node_name)
     {
-        // 1. init variables
-        robot_mkey = string("ambot");
-
         // 2. check if ROS2 is initialized properly
         if (!rclcpp::ok()) {
             RCLCPP_ERROR(this->get_logger(), "ROS2 not initialized properly!");
@@ -59,7 +56,7 @@ namespace bimax_driver_ns
     */
     void RosClass::rosSleep()
     {
-        rclcpp::sleep_for(std::chrono::milliseconds(1));
+        rclcpp::sleep_for(std::chrono::milliseconds(10));
     }
     
     /**  
@@ -71,48 +68,62 @@ namespace bimax_driver_ns
     {
         rclcpp::QoS command_qos(1);
         command_qos.best_effort();
-
-        this->declare_parameter<std::string>("ambot_type", "ambot_W1");
-        this->declare_parameter<std::vector<std::string>>("robot_subscribe_topic", std::vector<std::string>());
-        this->declare_parameter<std::vector<std::string>>("robot_advertise_topic", std::vector<std::string>());
-        this->declare_parameter("ambot_devices.motor_device", "/dev/ttyDefault");
-        this->declare_parameter("ambot_params.motor_baud", 1000000);
-        this->get_parameter("ambot_type", parameter_string_);
+        this->declare_parameter("bimax_server.mop_service_name", "mop_control");
+        this->declare_parameter("bimax_server.catcher_service_name", "catcher_control");
+        this->declare_parameter("bimax_server.led_service_name", "led_control");
+        this->declare_parameter("bimax_server.magnet_service_name", "magnet_control");
+        this->declare_parameter<std::string>("bimax_type", "bimax_W1");
+        this->declare_parameter("bimax_devices.motor_device", "/dev/ttyDefault");
+        this->declare_parameter("bimax_params.motor_baud", 1000000);
+        this->get_parameter("bimax_type", parameter_string_);
+        this->declare_parameter("bimax_topic.motor_command_topic", "/bimaxArmCommandValues");
+        this->declare_parameter("bimax_topic.gripper_position_topic", "/gripper_position");
+        this->declare_parameter("bimax_topic.motor_states_topic", "/bimaxArmStateValues");
+        this->declare_parameter("bimax_topic.motor_error_topic", "/bimax_motor_error");
         // 2. 读取设备参数
-        std::string motor_device;
-        if (!this->get_parameter("ambot_devices.motor_device", motor_device)) {
-            RCLCPP_ERROR(this->get_logger(), "Missing 'ambot_devices.motor_device' in YAML!");
+        if (!this->get_parameter("bimax_devices.motor_device", motor_device)) {
+            RCLCPP_ERROR(this->get_logger(), "Missing 'bimax_devices.motor_device' in YAML!");
             return false;
         }
+        this->get_parameter("bimax_params.motor_baud", motor_baud);
 
-        // 3. 读取配置参数
-        int motor_baud;
-        this->get_parameter("ambot_params.motor_baud", motor_baud);
-        // // 5. get subscribe and advertise topics
-        std::vector<std::string> subscribe_name = this->get_parameter("robot_subscribe_topic").as_string_array();
-        std::vector<std::string> advertise_name = this->get_parameter("robot_advertise_topic").as_string_array();
-        // // 6. get constant parameters
-        if (advertise_name.size() > 0) {
-            terminateValuePub = this->create_publisher<std_msgs::msg::Bool>(advertise_name.at(1), 10);
-        }
-        cmd_sub_ = create_subscription<bimax_msgs::msg::RobotCommand>("/bimaxArmCommandValues", command_qos,
+        //2. 主题发布订阅
+        std::string robot_cmd_topic = this->get_parameter("bimax_topic.motor_command_topic").as_string();
+        std::string gripper_topic = this->get_parameter("bimax_topic.gripper_position_topic").as_string();
+        std::string robot_state_topic = this->get_parameter("bimax_topic.motor_states_topic").as_string();
+        std::string motor_states_topic = this->get_parameter("bimax_topic.motor_error_topic").as_string();
+        cmd_sub_ = create_subscription<bimax_msgs::msg::RobotCommand>(robot_cmd_topic, command_qos,
         std::bind(&RosClass::commandCallback, this, std::placeholders::_1));
-        jaw_sub = create_subscription<std_msgs::msg::Float32>("/gripper_position",command_qos,std::bind(&RosClass::jawCallback, this, std::placeholders::_1));
-
+        jaw_sub = create_subscription<std_msgs::msg::Float32>(gripper_topic,command_qos,std::bind(&RosClass::jawCallback, this, std::placeholders::_1));
+  
+        state_pub_ = create_publisher<bimax_msgs::msg::RobotState>(robot_state_topic, 10);
+        motor_error_pub_ = create_publisher<bimax_msgs::msg::MotorError>(motor_states_topic, 10);
+        jaw_pub_ = create_publisher<std_msgs::msg::Float32>("/gripper_pos_states", 10);
         // 初始化服务
-        service_mop = create_service<bimax_msgs::srv::MopControl>("mop_control",std::bind(&RosClass::mop_handle_request, this, std::placeholders::_1, std::placeholders::_2));
-        RCLCPP_INFO(get_logger(), "Mop control service init successful!");
-        service_catcher = create_service<bimax_msgs::srv::CatcherControl>("catcher_control",std::bind(&RosClass::catcher_handle_request, this, std::placeholders::_1, std::placeholders::_2));
-        RCLCPP_INFO(get_logger(), "Vacuum control service init successful!");
-        service_led = create_service<bimax_msgs::srv::LedControl>("led_control",std::bind(&RosClass::led_handle_request, this, std::placeholders::_1, std::placeholders::_2));
-        RCLCPP_INFO(get_logger(), "LED control service init successful!");
-        service_magnet = create_service<bimax_msgs::srv::MagnetControl>("magnet_control",std::bind(&RosClass::magnet_handle_request, this, std::placeholders::_1, std::placeholders::_2));
-        RCLCPP_INFO(get_logger(), "Magnet control service init successful!");
-        // 状态发布
-   
-        state_pub_ = create_publisher<bimax_msgs::msg::RobotState>("/bimaxArmStateValues", 10);
-        RCLCPP_INFO(this->get_logger(), "robot Driver(base communication) init successful!");
+        std::string mop_name = this->get_parameter("bimax_server.mop_service_name").as_string();
+        std::string catcher_name = this->get_parameter("bimax_server.catcher_service_name").as_string();
+        std::string led_name = this->get_parameter("bimax_server.led_service_name").as_string();
+        std::string magnet_name = this->get_parameter("bimax_server.magnet_service_name").as_string();
+        
+        service_mop = create_service<bimax_msgs::srv::MopControl>(
+            mop_name, std::bind(&RosClass::mop_handle_request, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(get_logger(), "Mop control service '%s' init successful!", mop_name.c_str());
+        
+        service_catcher = create_service<bimax_msgs::srv::CatcherControl>(
+            catcher_name, std::bind(&RosClass::catcher_handle_request, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(get_logger(), "Vacuum control service '%s' init successful!", catcher_name.c_str());
+        
+        service_led = create_service<bimax_msgs::srv::LedControl>(
+            led_name, std::bind(&RosClass::led_handle_request, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(get_logger(), "LED control service '%s' init successful!", led_name.c_str());
+        
+        service_magnet = create_service<bimax_msgs::srv::MagnetControl>(
+            magnet_name, std::bind(&RosClass::magnet_handle_request, this, std::placeholders::_1, std::placeholders::_2));
+        RCLCPP_INFO(get_logger(), "Magnet control service '%s' init successful!", magnet_name.c_str());
+        
+        RCLCPP_INFO(this->get_logger(), "robot parameter init successful!");
         return true;
+
     }
     void RosClass::jawCallback(const std_msgs::msg::Float32::SharedPtr msg) 
     {
@@ -286,7 +297,7 @@ namespace bimax_driver_ns
         return false;
     }
 
-    void RosClass::robotFbValuePub(YiyouMecArm &mecarm,float &lef ,float &righ)
+    void RosClass::robotFbValuePub(YiyouMecArm &mecarm,float &lef ,float &righ,float & jaw_pos)
     {
     auto state_msg = bimax_msgs::msg::RobotState();
     state_msg.motor_state.push_back(createMotorState(0, lef, 0, 0.0f, 0)); 
@@ -296,8 +307,25 @@ namespace bimax_driver_ns
     state_msg.motor_state.push_back(createMotorState(4, righ, 0, 0.0f, 0)); 
     state_msg.motor_state.push_back(createMotorState(5, mecarm.pos_rad_motor3, mecarm.vel_rad_s_motor3, 0.0f, mecarm.torque_nm_motor3));  
     state_msg.motor_state.push_back(createMotorState(6, mecarm.pos_rad_motor4, mecarm.vel_rad_s_motor4, 0.0f, mecarm.torque_nm_motor4));
-    state_msg.motor_state.push_back(createMotorState(7, mecarm.pos_rad_motor5, mecarm.vel_rad_s_motor5, 0.0f, mecarm.torque_nm_motor5));  
+    state_msg.motor_state.push_back(createMotorState(7, mecarm.pos_rad_motor5, mecarm.vel_rad_s_motor5, 0.0f, mecarm.torque_nm_motor5)); 
+    auto error_msg = bimax_msgs::msg::MotorError();
+    error_msg.state_id1 = mecarm.status_motor1;
+    error_msg.state_id2 = mecarm.status_motor2;  // 假设有 status_motor2
+    error_msg.state_id3 = 0XFF;  // 假设有 status_motor3
+    error_msg.state_id4 = mecarm.status_motor3;  // 假设有 status_motor4
+    error_msg.state_id5 = mecarm.status_motor4;  // 假设有 status_motor5
+    error_msg.state_id6 = mecarm.status_motor5;  // 假设有 status_motor6
+    error_msg.error_id1 = mecarm.error_motor1;
+    error_msg.error_id2 = mecarm.error_motor2;
+    error_msg.error_id3 = 0;
+    error_msg.error_id4 = mecarm.error_motor3;
+    error_msg.error_id5 = mecarm.error_motor4;
+    error_msg.error_id6 = mecarm.error_motor5;
+    auto jaw_angle_msg = std_msgs::msg::Float32();
+    jaw_angle_msg.data=jaw_pos;
     state_pub_->publish(state_msg);
+    motor_error_pub_->publish(error_msg);
+    jaw_pub_->publish(jaw_angle_msg);
     }
 
 };

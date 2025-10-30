@@ -449,7 +449,7 @@ namespace bimax_driver_ns
                     << static_cast<int>(output_buf[i]) << " ";
         }
 
-        RCLCPP_INFO(ros->get_logger(), "Output frame: %s", hex_stream.str().c_str());
+        // RCLCPP_INFO(ros->get_logger(), "Output frame: %s", hex_stream.str().c_str());
         return total_bytes; 
     }
     // void PrivateProtocolCLASS::createCommandFrame(const uint8_t functionCode, const uint8_t commandNum, const protocolInputBuffer_TP& in, protocolOutputBuffer_TP &output)

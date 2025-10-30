@@ -34,7 +34,8 @@ namespace bimax_driver_ns{
 
         bool threadStop;
         std::vector<std::string> robotType;
-        YiyouMecArm mecarm;
+        YiyouMecArm mecarm={mecarm.status_motor1=0xFF,mecarm.status_motor2=0xFF,
+        mecarm.status_motor3=0xFF,mecarm.status_motor4=0xFF,mecarm.status_motor5=0xFF,mecarm.error_motor1=0};
         float lifter_l_pos;
         float  lifter_r_pos;
         float jaw_pos;
@@ -66,6 +67,7 @@ namespace bimax_driver_ns{
         ssize_t printReceivedDataWithFrequency(int motorFd) ;
         void ProccessAllMotorStateFromMCU(void);
         bool YiyouMotorprocess(bimax_msgs::msg::RobotCommand& cmd);
+        void checkToMotorStates(YiyouMecArm &mecarm);
 
     };
     
