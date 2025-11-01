@@ -204,6 +204,8 @@ namespace bimax_driver_ns{
         uint8_t inFlag;
         uint8_t currentReadCount;
         uint8_t read_buffer[LEN_MAX];
+        size_t buffer_len_ = 0;     // 当前缓冲区数据长度
+         uint8_t temp_buf[1024];
         // 2. set init value to variables
         // 3.wait for receive enough data to analysis
         for(;;)
@@ -215,20 +217,57 @@ namespace bimax_driver_ns{
                 pthread_exit(NULL);
             }
             //100hz
-            std::this_thread::sleep_for(std::chrono::milliseconds(15));  // 20ms
-        //    currentReadCount=printReceivedDataWithFrequency(motorFd);
-            currentReadCount = read(motorFd, read_buffer,LEN_MAX);
-            if (currentReadCount > 0) {
-            //     // 调试模式才打印原始数据
-                #ifdef DEBUG_MODE
-                printByteStream(read_buffer, currentReadCount);
-                #endif
-             protocol->processFrame(read_buffer,currentReadCount); 
-            } 
+
+            int n = read(motorFd, temp_buf, sizeof(temp_buf));
+
+            if (n > 0) {
+                // 将新数据添加到缓冲区
+                if (buffer_len_ + n <= sizeof(read_buffer)) {
+                    memcpy(read_buffer + buffer_len_, temp_buf, n);
+                    buffer_len_ += n;
+                    
+                    // 处理完整的数据帧，并获取已处理的字节数
+                    uint16_t processed_bytes = protocol->processFrame(read_buffer, buffer_len_);
+                    
+                    // 关键步骤：从缓冲区移除已处理的数据
+                    if (processed_bytes > 0) {
+                        if (processed_bytes < buffer_len_) {
+                            // 将未处理的数据移动到缓冲区开头
+                            memmove(read_buffer, read_buffer + processed_bytes, buffer_len_ - processed_bytes);
+                        }
+                        buffer_len_ -= processed_bytes;  // 更新缓冲区长度
+                    }
+                    
+                } else {
+                    // 缓冲区溢出，清空重新开始
+                    buffer_len_ = 0;
+                    std::cerr << "Serial buffer overflow!" << std::endl;
+                }
+            } else if (n == 0) {
+                // 无数据可读，短暂休眠
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            } else {
+                // 读取错误
+                if (errno != EAGAIN && errno != EWOULDBLOCK) {
+                    std::cerr << "Serial read error: " << strerror(errno) << std::endl;
+                }
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            }
+        }
+         // std::this_thread::sleep_for(std::chrono::milliseconds(20));  // 20ms
+        //    iurrentReadCount=printReceivedDataWithFrequency(motorFd);
+            // currentReadCount = read(motorFd, read_buffer,LEN_MAX);
+            // if (currentReadCount > 0) {
+            // //     // 调试模式才打印原始数据
+            //     #ifdef DEBUG_MODE
+            //     printByteStream(read_buffer, currentReadCount);
+            //     #endif
+            //     printByteStream(read_buffer, currentReadCount);
+            //  protocol->processFrame(read_buffer,currentReadCount); 
+            // } 
             // else{
             //     RCLCPP_ERROR(ros->get_logger(), "MUC uart date is update failed!");
             // }
-        }
         
     }
 
@@ -254,7 +293,7 @@ namespace bimax_driver_ns{
                 last_states_time=now;
             }
             
-            std::this_thread::sleep_for(std::chrono::milliseconds(7));  // 20ms
+            std::this_thread::sleep_for(std::chrono::milliseconds(3));  // 20ms
        }
     }
     void AmbotDriverCLASS::checkToMotorStates(YiyouMecArm &mecarm)
@@ -345,8 +384,8 @@ namespace bimax_driver_ns{
         databuf[0] = 0;  // reserver1的低字节
         databuf[1] = 0;  // reserver1的高字节
         databuf[2] = 0;  // reserver2
-        std::cout << "cmd.motor_command[1].q = " << cmd.motor_command[1].q << std::endl;
-        std::cout << "cmd.motor_command[2].q = " << cmd.motor_command[2].q << std::endl;
+        RCLCPP_INFO(ros->get_logger(), "cmd.motor_command[1].q = %f ", cmd.motor_command[1].q);
+        RCLCPP_INFO(ros->get_logger(), "cmd.motor_command[2].q = %f ", cmd.motor_command[2].q);   
         // 2. 存储 Motor_Control_Mode（第4字节）
         // 2. 存储 Motor_Control_Mode（第4字节）
         databuf[3] = static_cast<uint8_t>(cmd.motor_command[1].mode);

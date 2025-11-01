@@ -220,60 +220,114 @@ namespace bimax_driver_ns
         else 
             return -1;
     }
+    uint16_t PrivateProtocolCLASS::getExpectedFrameLength(uint16_t cmdId) const {
+        // 根据您的协议返回期望的帧长度
+        switch (cmdId) {
+            case ID_MEC_ARM_UPLOAD: return 85; // 示例值，根据实际协议修改
+            case ID_LIFTS_UPLOAD: return 29;   // 示例值
+            case ID_JAW_MOTOR_UPLOAD: return 9; // 示例值
+            default: return 9; // 最小帧长度
+        }
+    }
         // 帧处理主函数
-    uint8_t PrivateProtocolCLASS::processFrame(const uint8_t* data, uint16_t length) {
-        uint8_t result = 0; // 初始化计数器
-        uint16_t  store_length = 0; //读到的当前帧长度  
-        uint16_t cmdId =0;
-        for (uint16_t i = 0; i < length; i++) {
-            if ((data[i]==FRAME_HEAD_H)&& (data[i + 1] == FRAME_HEAD_L)) {
-                store_length = 0;
-                cmdId = data[i + 5]; // 命令码ID 
+    uint16_t PrivateProtocolCLASS::processFrame(const uint8_t* data, uint16_t length) {
+        uint16_t processed_bytes = 0; // 实际处理了的字节数
+        uint16_t frames_found = 0;
+        
+        for (uint16_t i = 0; i < length; ) { // 注意：这里没有i++
+            // 检查剩余数据是否足够寻找帧头
+            if (i + 1 >= length) break;
+            
+            // 查找帧头
+            if (data[i] == FRAME_HEAD_H && data[i + 1] == FRAME_HEAD_L) {
+                // 检查是否能够读取命令码
+                if (i + 5 >= length) {
+                    // 数据不完整，等待更多数据
+                    break;
+                }
+                
+                uint16_t cmdId = data[i + 5];
+                uint16_t store_length = 0;
                 DeviceType type;
+                
+                // 根据命令码获取期望的完整帧长度
+                uint16_t expected_length = getExpectedFrameLength(cmdId);
+                
+                // 检查是否有完整的帧数据
+                if (i + expected_length > length) {
+                    // 数据不完整，等待更多数据
+                    break;
+                }
+                
                 switch (cmdId) {
                     case ID_MEC_ARM_UPLOAD:
                         type = DeviceType::MEC_ARM;
                         store_length = comm_frame_store(statusframGroup[ID_MEC_ARM_STORE], &data[i]);
-                        arm_queue.push(type, statusframGroup[ID_MEC_ARM_STORE]->databuf,store_length-1);
-                        #ifdef DEBUG_MODE
-                        statusframGroup[ID_MEC_ARM_STORE]->print();  
-                        #endif
+                        if (store_length > 0 && store_length <= expected_length) {
+                            arm_queue.push(type, statusframGroup[ID_MEC_ARM_STORE]->databuf, store_length-1);
+                            #ifdef DEBUG_MODE
+                            statusframGroup[ID_MEC_ARM_STORE]->print();  
+                            #endif
+                            frames_found++;
+                        }
                         break;
                         
                     case ID_LIFTS_UPLOAD:
-                         type = DeviceType::LIFTS;
+                        type = DeviceType::LIFTS;
                         store_length = comm_frame_store(statusframGroup[ID_LIFTS_STORE], &data[i]);
-                        arm_queue.push(type, statusframGroup[ID_LIFTS_STORE]->databuf,store_length-1);
-                        #ifdef DEBUG_MODE
-                        statusframGroup[ID_LIFTS_STORE]->print();                      
-                        #endif                             
+                        if (store_length > 0 && store_length <= expected_length) {
+                            arm_queue.push(type, statusframGroup[ID_LIFTS_STORE]->databuf, store_length-1);
+                            #ifdef DEBUG_MODE
+                            statusframGroup[ID_LIFTS_STORE]->print();                      
+                            #endif
+                            frames_found++;
+                        }
                         break;
+                        
                     case ID_JAW_MOTOR_UPLOAD:
                         type = DeviceType::JAW_MOTOR;
                         store_length = comm_frame_store(statusframGroup[ID_JAW_MOTOR_STORE], &data[i]);
-                         arm_queue.push(type, statusframGroup[ID_JAW_MOTOR_STORE]->databuf,store_length-1);
-                        #ifdef DEBUG_MODE
-                        statusframGroup[ID_JAW_MOTOR_STORE]->print();                      
-                        #endif     
+                        if (store_length > 0 && store_length <= expected_length) {
+                            arm_queue.push(type, statusframGroup[ID_JAW_MOTOR_STORE]->databuf, store_length-1);
+                            #ifdef DEBUG_MODE
+                            statusframGroup[ID_JAW_MOTOR_STORE]->print();                      
+                            #endif
+                            frames_found++;
+                        }
                         break;
                         
+                    default:
+                        // 未知命令码，跳过这个帧头继续搜索
+                        i++;
+                        continue;
                 }
                 
-                if (store_length != 0) {
-                    result++;
+                if (store_length > 0) {
+                    // 成功处理一帧，跳到下一帧开始位置
+                    i += store_length;
+                    processed_bytes = i; // 更新已处理字节数
+                } else {
+                    // 解析失败，跳过这个帧头继续搜索
+                    i++;
                 }
-                i = i + store_length; //跳出for，找下一帧
+            } else {
+                // 不是帧头，继续搜索
+                i++;
+            }
+            
+            // 安全限制：单次处理不要超过缓冲区大小
+            if (processed_bytes > length) {
+                break;
             }
         }
         
-        
-        return result;
+        return processed_bytes; // 返回实际处理了多少字节
     }
 
     void  PrivateProtocolCLASS::updateDataConsumer(YiyouMecArm &mecarm,float &lifter_l_pos,float  &lifter_r_pos,float &jaw_pos) {
             DeviceType type;
             std::vector<uint8_t> data;
-            if (arm_queue.pop(type,data, 2ms)) {
+            if (arm_queue.pop(type,data, 1ms)) {
                 switch (type) {
                     case DeviceType::MEC_ARM:{
                         yiyouMotorDateUpdate(data,mecarm); 
@@ -449,7 +503,7 @@ namespace bimax_driver_ns
                     << static_cast<int>(output_buf[i]) << " ";
         }
 
-        // RCLCPP_INFO(ros->get_logger(), "Output frame: %s", hex_stream.str().c_str());
+        RCLCPP_INFO(ros->get_logger(), "Output frame: %s", hex_stream.str().c_str());
         return total_bytes; 
     }
     // void PrivateProtocolCLASS::createCommandFrame(const uint8_t functionCode, const uint8_t commandNum, const protocolInputBuffer_TP& in, protocolOutputBuffer_TP &output)

@@ -89,7 +89,8 @@ namespace bimax_driver_ns
         std::mutex queue_mutex_;
         std::condition_variable queue_cv_;
         rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr terminateValueSub;
-
+        bimax_msgs::msg::RobotCommand latest_command_;
+        std::atomic<bool> command_ready_{false};
         float last_jaw_cmd_;
         float jaw_cmd_;
         uint8_t last_mop_state_;

@@ -13,10 +13,24 @@
     */
 Robot::Robot(int argc, char** argv)
 {
+
     rclcpp::init(argc, argv);
     ros = std::make_shared<bimax_driver_ns::RosClass>(argc, argv, "ambot_driver_node");
-    spin_thread_ = std::thread([this]() {
-    rclcpp::spin(ros->get_node_base_interface());});
+        
+        // 直接使用多线程执行器 - 让ROS2自动管理线程
+    executor_ = std::make_shared<rclcpp::executors::MultiThreadedExecutor>(
+            rclcpp::ExecutorOptions(), 
+            4  // 根据CPU核心数调整线程数
+        );
+    executor_->add_node(ros);
+        
+    executor_thread_ = std::thread([this]() {
+            executor_->spin();
+    });
+    // rclcpp::init(argc, argv);
+    // ros = std::make_shared<bimax_driver_ns::RosClass>(argc, argv, "ambot_driver_node");
+    // spin_thread_ = std::thread([this]() {
+    // rclcpp::spin(ros->get_node_base_interface());});
 }
 
 /**  
@@ -29,8 +43,9 @@ Robot::~Robot()
 {
 
     delete robotDriver;
-    if (spin_thread_.joinable()) {
-        spin_thread_.join();
+    executor_->cancel();
+    if (executor_thread_.joinable()) {
+            executor_thread_.join();
     }
     rclcpp::shutdown();
 }
@@ -84,7 +99,7 @@ bool Robot::run(void)
 
         auto now = std::chrono::steady_clock::now();
         // 任务0：电机反馈（20ms周期）
-        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_states_time).count() >= 20) 
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_states_time).count() >= 10) 
         {
             ros->robotFbValuePub(robotDriver->mecarm,robotDriver->lifter_l_pos,robotDriver->lifter_r_pos,robotDriver->jaw_pos);
             last_states_time=now;
@@ -105,7 +120,7 @@ bool Robot::run(void)
         }
 
         // 任务2：LED控制（100ms周期） 
-        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_tools_time).count() >= 200) 
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_tools_time).count() >= 500) 
         {
             bool green_changed = ros->get_green_state(rad_led);
             bool yellow_changed = ros->get_yellow_state(yellow_led);

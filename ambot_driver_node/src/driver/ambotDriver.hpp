@@ -27,15 +27,29 @@
 #include "ambotRosClass.hpp"
     
 namespace bimax_driver_ns{
-     #define LEN_MAX 255
+     #define LEN_MAX 4096
     class AmbotDriverCLASS
     {
     public:
 
         bool threadStop;
         std::vector<std::string> robotType;
-        YiyouMecArm mecarm={mecarm.status_motor1=0xFF,mecarm.status_motor2=0xFF,
-        mecarm.status_motor3=0xFF,mecarm.status_motor4=0xFF,mecarm.status_motor5=0xFF,mecarm.error_motor1=0};
+        YiyouMecArm mecarm = {
+            .pos_rad_motor1 = 0.0f, .vel_rad_s_motor1 = 0.0f, .torque_nm_motor1 = 0.0f,
+            .status_motor1 = 0xFF, .error_motor1 = 0,
+            
+            .pos_rad_motor2 = 0.0f, .vel_rad_s_motor2 = 0.0f, .torque_nm_motor2 = 0.0f,
+            .status_motor2 = 0xFF, .error_motor2 = 0,
+            
+            .pos_rad_motor3 = 0.0f, .vel_rad_s_motor3 = 0.0f, .torque_nm_motor3 = 0.0f,
+            .status_motor3 = 0xFF, .error_motor3 = 0,
+            
+            .pos_rad_motor4 = 0.0f, .vel_rad_s_motor4 = 0.0f, .torque_nm_motor4 = 0.0f,
+            .status_motor4 = 0xFF, .error_motor4 = 0,
+            
+            .pos_rad_motor5 = 0.0f, .vel_rad_s_motor5 = 0.0f, .torque_nm_motor5 = 0.0f,
+            .status_motor5 = 0xFF, .error_motor5 = 0
+        };
         float lifter_l_pos;
         float  lifter_r_pos;
         float jaw_pos;

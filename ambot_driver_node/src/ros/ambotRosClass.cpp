@@ -56,7 +56,7 @@ namespace bimax_driver_ns
     */
     void RosClass::rosSleep()
     {
-        rclcpp::sleep_for(std::chrono::milliseconds(10));
+        rclcpp::sleep_for(std::chrono::milliseconds(1));
     }
     
     /**  
@@ -66,8 +66,9 @@ namespace bimax_driver_ns
     */
     bool RosClass::init()
     {
-        rclcpp::QoS command_qos(1);
-        command_qos.best_effort();
+        rclcpp::QoS command_qos(1);  // 队列深度=1
+        command_qos.best_effort();   // 最大努力，低延迟
+        command_qos.durability(RMW_QOS_POLICY_DURABILITY_VOLATILE); // 不保存历史
         this->declare_parameter("bimax_server.mop_service_name", "mop_control");
         this->declare_parameter("bimax_server.catcher_service_name", "catcher_control");
         this->declare_parameter("bimax_server.led_service_name", "led_control");
@@ -139,17 +140,16 @@ namespace bimax_driver_ns
     }
     void RosClass::commandCallback(const bimax_msgs::msg::RobotCommand::SharedPtr msg) 
     {
-        std::lock_guard<std::mutex> lock(queue_mutex_);
-
-        command_queue_.push(*msg);
-        queue_cv_.notify_one();  // 通知有新的命令到达
+        // 如果处理逻辑简单，直接处理避免队列
+        latest_command_ = *msg;  // 原子操作或简单的内存拷贝
+        command_ready_ = true;
     }
     void RosClass::mop_handle_request(
         const std::shared_ptr<bimax_msgs::srv::MopControl::Request> request,
         std::shared_ptr<bimax_msgs::srv::MopControl::Response> response)
     {
         // 验证输入状态是否合法
-        if (request->mop_motor_pwm > 1000 || request->mop_state > 1) {
+        if (request->mop_motor_pwm > 2000 || request->mop_state > 1) {
             response->success = false;
             response->message = "错误：状态值必须是0、1";
             return;
@@ -285,13 +285,10 @@ namespace bimax_driver_ns
     // *   @return     none
     // */
     bool RosClass::getJointMotorCommand(bimax_msgs::msg::RobotCommand& cmd) {
-    std::unique_lock<std::mutex> lock(queue_mutex_);
     
-    if (queue_cv_.wait_for(lock, std::chrono::milliseconds(1), 
-                         [this]{ return !command_queue_.empty(); }))
-        {
-            cmd = command_queue_.front();
-            command_queue_.pop();
+        if (command_ready_) {
+            cmd = latest_command_;
+            command_ready_ = false;
             return true;
         }
         return false;

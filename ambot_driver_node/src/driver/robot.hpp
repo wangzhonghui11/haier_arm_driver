@@ -30,6 +30,8 @@ class Robot
 {
     private:
         /* data */
+        std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> executor_;
+        std::thread executor_thread_;
         std::shared_ptr<bimax_driver_ns::RosClass> ros;
         bimax_driver_ns::AmbotDriverCLASS* robotDriver;
         std::array<float, 2> joint_data;
