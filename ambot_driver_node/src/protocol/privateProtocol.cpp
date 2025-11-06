@@ -7,7 +7,6 @@
 namespace bimax_driver_ns
 {
         UnifiedDeviceQueue arm_queue; // 统一队列替换原有三个队列
-        TimerHostComm Timer_HostComm = {};
         // HeartBeat HeartBeat = {};
 
         /*****************************************************/ 
@@ -56,159 +55,11 @@ namespace bimax_driver_ns
             &uploadframeMecarm,
             &uploadframeLifts,
             &uploadframeJaw
-        };
-        
-
-        /*****************************************************/ 
-        // 导航发送给MCU的数据结构初始化
-        TimeSet dataTimeSet = {};
-        MopSet dataMopSet = {};
-        JawSet dataJawSet = {};
-        CatcherSet dataCatcherSet = {};
-        MagnetSet dataMagnetSet = {};
-        MecArmSet dataMecArmSet = {};
-        LiftsSet dataLiftsSet = {};
-        LedSet dataLedSet = {};
-        Heartbeat dataHeartbeat = {};
-        MecArmMitSet dataArmMitset={};
-        // 导航发送给MCU的帧结构初始化
-        CommFrame cmdframTimeSet = {
-            .head_H =FRAME_HEAD_H ,
-            .head_L = FRAME_HEAD_L,
-            .frame_ID_H = 0,
-            .frame_ID_L = 0,
-            .length = 1 + DATA_LEGTH_TIME_SET,
-            .cmd_ID =  ID_CMD_TIME_SET,
-            .databuf = dataTimeSet.data,
-            .CRC_H = 0,
-            .CRC_L = 0
-        };
-
-        CommFrame cmdframMopSet = {
-            .head_H =FRAME_HEAD_H ,
-            .head_L = FRAME_HEAD_L,
-            .frame_ID_H = 0,
-            .frame_ID_L = 0,
-            .length = 1 + DATA_LEGTH_MOP_SET,
-            .cmd_ID =  ID_CMD_MOP_SET,
-            .databuf = dataMopSet.data,
-            .CRC_H = 0,
-            .CRC_L = 0
-        };
-
-        CommFrame cmdframJawSet = {
-            .head_H =FRAME_HEAD_H ,
-            .head_L = FRAME_HEAD_L,
-            .frame_ID_H = 0,
-            .frame_ID_L = 0,
-            .length = 1 + DATA_LEGTH_JAW_SET,
-            .cmd_ID =  ID_CMD_JAW_SET,
-            .databuf = dataJawSet.data,
-            .CRC_H = 0,
-            .CRC_L = 0
-        };
-
-        CommFrame cmdframCatcherSet = {
-            .head_H =FRAME_HEAD_H ,
-            .head_L = FRAME_HEAD_L,
-            .frame_ID_H = 0,
-            .frame_ID_L = 0,
-            .length = 1 + DATA_LEGTH_CATCHER_SET,
-            .cmd_ID =  ID_CMD_CATCHER_SET,
-            .databuf = dataCatcherSet.data,
-            .CRC_H = 0,
-            .CRC_L = 0
-        };
-
-        CommFrame cmdframMagnetet = {
-            .head_H =FRAME_HEAD_H ,
-            .head_L = FRAME_HEAD_L,
-            .frame_ID_H = 0,
-            .frame_ID_L = 0,
-            .length = 1 + DATA_LEGTH_MAGNET_SET,
-            .cmd_ID =  ID_CMD_MAGNET_SET,
-            .databuf = dataMagnetSet.data,
-            .CRC_H = 0,
-            .CRC_L = 0
-        };
-
-        CommFrame cmdframMecArmSet = {
-            .head_H =FRAME_HEAD_H ,
-            .head_L = FRAME_HEAD_L,
-            .frame_ID_H = 0,
-            .frame_ID_L = 0,
-            .length = 1 + DATA_LEGTH_MECARM_SET,
-            .cmd_ID =  ID_CMD_MECARM_SET,
-            .databuf = dataMecArmSet.data,
-            .CRC_H = 0,
-            .CRC_L = 0
-        };
-        CommFrame cmdArmMitSet = {
-            .head_H =FRAME_HEAD_H ,
-            .head_L = FRAME_HEAD_L,
-            .frame_ID_H = 0,
-            .frame_ID_L = 0,
-            .length = 1 + DATA_LEGTH_MECARM_MIT_SET,
-            .cmd_ID =  ID_CMD_MECARM_MIT_SET,
-            .databuf = dataArmMitset.data,
-            .CRC_H = 0,
-            .CRC_L = 0
-        };
-
-        CommFrame cmdframLiftsSet = {
-            .head_H =FRAME_HEAD_H ,
-            .head_L = FRAME_HEAD_L,
-            .frame_ID_H = 0,
-            .frame_ID_L = 0,
-            .length = 1 + DATA_LEGTH_LIFTS_SET,
-            .cmd_ID =  ID_CMD_LIFTS_SET,
-            .databuf = dataLiftsSet.data,
-            .CRC_H = 0,
-            .CRC_L = 0
-        };
-
-        CommFrame cmdframLedSet = {
-            .head_H =FRAME_HEAD_H ,
-            .head_L = FRAME_HEAD_L,
-            .frame_ID_H = 0,
-            .frame_ID_L = 0,
-            .length = 1 + DATA_LEGTH_LED_SET,
-            .cmd_ID =  ID_CMD_LED_SET,
-            .databuf = dataLedSet.data,
-            .CRC_H = 0,
-            .CRC_L = 0
-        };
-
-        // CommFrame cmdframHeartbeat = {
-        //     .head_H = 0,
-        //     .head_L = 0,
-        //     .frame_ID_H = 0,
-        //     .frame_ID_L = 0,
-        //     .length = 1 + DATA_LENGTH_HEARTBEAT,
-        //     .cmd_ID = static_cast<uint8_t>(StoreNum::HEARTBEAT),
-        //     .databuf = &dataHeartbeat.data,
-        //     .CRC_H = 0,
-        //     .CRC_L = 0
-        // };
-
-        // 命令帧组初始化
-        CommFrame* cmdframGroup[9] = {
-            &cmdframTimeSet,
-            &cmdframMopSet,
-            &cmdframJawSet,
-            &cmdframCatcherSet,
-            &cmdframMagnetet,
-            &cmdframMecArmSet,
-            &cmdframLiftsSet,
-            &cmdframLedSet,
-            &cmdArmMitSet
-        };    
+        }; 
 
     PrivateProtocolCLASS::PrivateProtocolCLASS(const std::shared_ptr<RosClass>& ros) : ros(ros)
     {
-
          RCLCPP_INFO(ros->get_logger(), "PrivateProtocolCLASS Interface init successfully!"); 
-        // motorLimit = {4*MY_PI, -4*MY_PI, 30, -30, 12, -12, 500., 0, 5., 0};
     }
     
     PrivateProtocolCLASS::~PrivateProtocolCLASS()
@@ -262,19 +113,20 @@ namespace bimax_driver_ns
                 switch (cmdId) {
                     case ID_MEC_ARM_UPLOAD:
                         type = DeviceType::MEC_ARM;
-                        store_length = comm_frame_store(statusframGroup[ID_MEC_ARM_STORE], &data[i]);
+                        store_length = commFrameStore(statusframGroup[ID_MEC_ARM_STORE], &data[i]);
                         if (store_length > 0 && store_length <= expected_length) {
                             arm_queue.push(type, statusframGroup[ID_MEC_ARM_STORE]->databuf, store_length-1);
                             #ifdef DEBUG_MODE
                             statusframGroup[ID_MEC_ARM_STORE]->print();  
                             #endif
+
                             frames_found++;
                         }
                         break;
                         
                     case ID_LIFTS_UPLOAD:
-                        type = DeviceType::LIFTS;
-                        store_length = comm_frame_store(statusframGroup[ID_LIFTS_STORE], &data[i]);
+                        type = DeviceType::LIFTS_MOTOR;
+                        store_length = commFrameStore(statusframGroup[ID_LIFTS_STORE], &data[i]);
                         if (store_length > 0 && store_length <= expected_length) {
                             arm_queue.push(type, statusframGroup[ID_LIFTS_STORE]->databuf, store_length-1);
                             #ifdef DEBUG_MODE
@@ -286,7 +138,7 @@ namespace bimax_driver_ns
                         
                     case ID_JAW_MOTOR_UPLOAD:
                         type = DeviceType::JAW_MOTOR;
-                        store_length = comm_frame_store(statusframGroup[ID_JAW_MOTOR_STORE], &data[i]);
+                        store_length = commFrameStore(statusframGroup[ID_JAW_MOTOR_STORE], &data[i]);
                         if (store_length > 0 && store_length <= expected_length) {
                             arm_queue.push(type, statusframGroup[ID_JAW_MOTOR_STORE]->databuf, store_length-1);
                             #ifdef DEBUG_MODE
@@ -324,7 +176,7 @@ namespace bimax_driver_ns
         return processed_bytes; // 返回实际处理了多少字节
     }
 
-    void  PrivateProtocolCLASS::updateDataConsumer(YiyouMecArm &mecarm,float &lifter_l_pos,float  &lifter_r_pos,float &jaw_pos) {
+    void  PrivateProtocolCLASS::updateDataConsumer(YiyouMecArm &mecarm,float &lifterLeftPos,float  &lifterRightPos,float &jawPos) {
             DeviceType type;
             std::vector<uint8_t> data;
             if (arm_queue.pop(type,data, 1ms)) {
@@ -332,11 +184,11 @@ namespace bimax_driver_ns
                     case DeviceType::MEC_ARM:{
                         yiyouMotorDateUpdate(data,mecarm); 
                         break;}
-                    case DeviceType::LIFTS:{
-                        lifterDateUpdate(data, lifter_l_pos, lifter_r_pos); // 通过引用返回
+                    case DeviceType::LIFTS_MOTOR:{
+                        lifterDateUpdate(data, lifterLeftPos, lifterRightPos); // 通过引用返回
                         break;}
                     case DeviceType::JAW_MOTOR:{
-                        jawMotorDateUpdate(data, jaw_pos);
+                        jawMotorDateUpdate(data, jawPos);
                         break;}
                 }
             }
@@ -365,39 +217,41 @@ namespace bimax_driver_ns
 
         // 解析并赋值 motor1
         size_t offset = 4;
-        mecarm.pos_rad_motor1 = readFloat(offset); offset += 4;
-        mecarm.vel_rad_s_motor1 = readFloat(offset); offset += 4;
-        mecarm.torque_nm_motor1 = readFloat(offset); offset += 4;
+ // Motor1 - 应用中值+限幅组合滤波
+        mecarm.pos_rad_motor1 = motor_filters_[0].pos_filter.filter(readFloat(offset)); offset += 4;
+        mecarm.vel_rad_s_motor1 = motor_filters_[0].vel_filter.filter(readFloat(offset)); offset += 4;
+        mecarm.torque_nm_motor1 = motor_filters_[0].torque_filter.filter(readFloat(offset)); offset += 4;
         mecarm.status_motor1 = readUint16(offset); offset += 2;
         mecarm.error_motor1 = readUint16(offset); offset += 2;
 
-        // 解析并赋值 motor2
-        mecarm.pos_rad_motor2 = readFloat(offset); offset += 4;
-        mecarm.vel_rad_s_motor2 = readFloat(offset); offset += 4;
-        mecarm.torque_nm_motor2 = readFloat(offset); offset += 4;
+        // Motor2
+        mecarm.pos_rad_motor2 = motor_filters_[1].pos_filter.filter(readFloat(offset)); offset += 4;
+        mecarm.vel_rad_s_motor2 = motor_filters_[1].vel_filter.filter(readFloat(offset)); offset += 4;
+        mecarm.torque_nm_motor2 = motor_filters_[1].torque_filter.filter(readFloat(offset)); offset += 4;
         mecarm.status_motor2 = readUint16(offset); offset += 2;
         mecarm.error_motor2 = readUint16(offset); offset += 2;
 
-        // 解析并赋值 motor3
-        mecarm.pos_rad_motor3 = readFloat(offset); offset += 4;
-        mecarm.vel_rad_s_motor3 = readFloat(offset); offset += 4;
-        mecarm.torque_nm_motor3 = readFloat(offset); offset += 4;
+        // Motor3
+        mecarm.pos_rad_motor3 = motor_filters_[2].pos_filter.filter(readFloat(offset)); offset += 4;
+        mecarm.vel_rad_s_motor3 = motor_filters_[2].vel_filter.filter(readFloat(offset)); offset += 4;
+        mecarm.torque_nm_motor3 = motor_filters_[2].torque_filter.filter(readFloat(offset)); offset += 4;
         mecarm.status_motor3 = readUint16(offset); offset += 2;
         mecarm.error_motor3 = readUint16(offset); offset += 2;
 
-        // 解析并赋值 motor4
-        mecarm.pos_rad_motor4 = readFloat(offset); offset += 4;
-        mecarm.vel_rad_s_motor4 = readFloat(offset); offset += 4;
-        mecarm.torque_nm_motor4 = readFloat(offset); offset += 4;
+        // Motor4
+        mecarm.pos_rad_motor4 = motor_filters_[3].pos_filter.filter(readFloat(offset)); offset += 4;
+        mecarm.vel_rad_s_motor4 = motor_filters_[3].vel_filter.filter(readFloat(offset)); offset += 4;
+        mecarm.torque_nm_motor4 = motor_filters_[3].torque_filter.filter(readFloat(offset)); offset += 4;
         mecarm.status_motor4 = readUint16(offset); offset += 2;
         mecarm.error_motor4 = readUint16(offset); offset += 2;
 
-        // 解析并赋值 motor5
-        mecarm.pos_rad_motor5 = readFloat(offset); offset += 4;
-        mecarm.vel_rad_s_motor5 = readFloat(offset); offset += 4;
-        mecarm.torque_nm_motor5 = readFloat(offset); offset += 4;
+        // Motor5
+        mecarm.pos_rad_motor5 = motor_filters_[4].pos_filter.filter(readFloat(offset)); offset += 4;
+        mecarm.vel_rad_s_motor5 = motor_filters_[4].vel_filter.filter(readFloat(offset)); offset += 4;
+        mecarm.torque_nm_motor5 = motor_filters_[4].torque_filter.filter(readFloat(offset)); offset += 4;
         mecarm.status_motor5 = readUint16(offset); offset += 2;
         mecarm.error_motor5 = readUint16(offset); offset += 2;
+
 
         // 打印调试信息（可选）
         // std::cout << "Motor1 Position: " << mecarm.pos_rad_motor1 << " rad" << std::endl;
@@ -411,18 +265,14 @@ namespace bimax_driver_ns
     {
         uint8_t pos[] = { data[4], data[5], data[6], data[7] };
         memcpy(&postion, pos, sizeof(float));
-        // std::cout << "夹爪位置: " << postion << std::endl;
     }
 
-    void PrivateProtocolCLASS::lifterDateUpdate(std::vector<uint8_t> data, float& left_value, float& right_value) {
-        uint8_t left_bytes[] = { data[4], data[5], data[6], data[7] };
-        memcpy(&left_value, left_bytes, sizeof(float));
+    void PrivateProtocolCLASS::lifterDateUpdate(std::vector<uint8_t> data, float& leftValue, float& rightValue) {
+        uint8_t leftBytes[] = { data[4], data[5], data[6], data[7] };
+        memcpy(&leftValue, leftBytes, sizeof(float));
 
-        uint8_t right_bytes[] = { data[16], data[17], data[18], data[19] };
-        memcpy(&right_value, right_bytes, sizeof(float));
-
-        // std::cout << "左升降位置: " << left_value << std::endl;
-        // std::cout << "右升降位置: " << right_value << std::endl;
+        uint8_t rightBytes[] = { data[16], data[17], data[18], data[19] };
+        memcpy(&rightValue, rightBytes, sizeof(float));
     }
     /**  
     *   @brief      create get ID protocol frame
@@ -431,14 +281,14 @@ namespace bimax_driver_ns
     *   @return     none
         */
 
-    uint8_t PrivateProtocolCLASS::comm_frame_store(CommFrame* statusframGroup, const uint8_t* databuf) 
+    uint8_t PrivateProtocolCLASS::commFrameStore(CommFrame* statusframGroup, const uint8_t* databuf) 
     {
          uint8_t store_length = 0;  // store_length=事件控制码长度(1byte)+数据内容的长度
          uint16_t data_length = statusframGroup->length - 1;  // data_length=store_length-事件控制码长度(1byte)
         
          statusframGroup->CRC_H = databuf[6 + data_length + 0];
          statusframGroup->CRC_L = databuf[6 + data_length + 1];  
-        uint16_t crc_rslt =  usMBCRC16(const_cast<uint8_t*>(&databuf[5]), (data_length + 1));
+         uint16_t crc_rslt =  usMBCRC16(const_cast<uint8_t*>(&databuf[5]), (data_length + 1));
         
         if(((statusframGroup->CRC_H << 8) | (statusframGroup->CRC_L)) == crc_rslt)
         {
@@ -460,14 +310,18 @@ namespace bimax_driver_ns
         return store_length;
     }
 
-    uint8_t PrivateProtocolCLASS::comm_frame_upload(CommFrame* frame, uint8_t* output_buf) {
+    uint8_t PrivateProtocolCLASS::commFrameUpload(CommFrame* frame, uint8_t* output_buf) {
         // 参数检查
         if (!frame || !frame->databuf || !output_buf || frame->length < 1 || frame->length > 256) {
-            RCLCPP_WARN(ros->get_logger(), "comm_frame_upload frame is warnning!");    
+            RCLCPP_WARN(ros->get_logger(), "commFrameUpload frame is warnning!");    
             return 0;  // 或抛出异常
         }
 
         // 线程安全的计数器
+        size_t total_bytes=0;
+        uint16_t crc_value=0;
+        uint8_t databuf_temp[256] = {0};  
+        std::stringstream hex_stream;
         static std::atomic<uint16_t> upload_cnt{0};
         const uint16_t frame_id = ++upload_cnt;
         const uint16_t data_length = frame->length - 1;
@@ -476,17 +330,15 @@ namespace bimax_driver_ns
         // 设置Frame ID
         frame->frame_ID_H = static_cast<uint8_t>((frame_id >> 8) & 0xFF);
         frame->frame_ID_L = static_cast<uint8_t>(frame_id & 0xFF);
-        // u_int8_t arr[]={0xC8 ,0xCC, 0x4C, 0x3D, 0xC8 ,0xCC, 0x4C, 0x3D};
-        // frame->databuf=arr;
-        // 准备CRC计算数据
-        uint8_t databuf_temp[256] = {0};
+
         databuf_temp[0] = frame->cmd_ID;
         for (uint8_t i = 1; i <= data_length; i++) {
             databuf_temp[i] = frame->databuf[i-1];
         }
 
         // 计算CRC
-        uint16_t crc_value = usMBCRC16(databuf_temp, frame->length);
+
+        crc_value = usMBCRC16(databuf_temp, frame->length);
         frame->CRC_H = static_cast<uint8_t>(crc_value >> 8);
         frame->CRC_L = static_cast<uint8_t>(crc_value & 0xFF);
 
@@ -495,20 +347,15 @@ namespace bimax_driver_ns
         memcpy(output_buf + 6, frame->databuf, data_length);        // 数据
         memcpy(output_buf + 6 + data_length, &frame->CRC_H, 1);     // CRC高字节
         memcpy(output_buf + 6 + data_length + 1, &frame->CRC_L, 1); // CRC低字节
-        size_t total_bytes=6 + data_length + 2;
+        total_bytes=6 + data_length + 2;
         // Build hex string for logging
-        std::stringstream hex_stream;
+
         for (size_t i = 0; i < total_bytes; i++) {
             hex_stream << std::hex << std::setw(2) << std::setfill('0') 
                     << static_cast<int>(output_buf[i]) << " ";
         }
-
         RCLCPP_INFO(ros->get_logger(), "Output frame: %s", hex_stream.str().c_str());
         return total_bytes; 
     }
-    // void PrivateProtocolCLASS::createCommandFrame(const uint8_t functionCode, const uint8_t commandNum, const protocolInputBuffer_TP& in, protocolOutputBuffer_TP &output)
-    // {
-
-    // }
 
 }

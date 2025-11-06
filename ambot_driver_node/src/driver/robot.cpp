@@ -27,10 +27,6 @@ Robot::Robot(int argc, char** argv)
     executor_thread_ = std::thread([this]() {
             executor_->spin();
     });
-    // rclcpp::init(argc, argv);
-    // ros = std::make_shared<bimax_driver_ns::RosClass>(argc, argv, "ambot_driver_node");
-    // spin_thread_ = std::thread([this]() {
-    // rclcpp::spin(ros->get_node_base_interface());});
 }
 
 /**  
@@ -94,6 +90,7 @@ bool Robot::run(void)
     static auto last_states_time = std::chrono::steady_clock::now();
     static auto last_control_time = std::chrono::steady_clock::now();
     static auto last_tools_time = std::chrono::steady_clock::now();
+    static auto last_settime_time=std::chrono::steady_clock::now();
      if(rclcpp::ok())
     {
 
@@ -101,20 +98,21 @@ bool Robot::run(void)
         // 任务0：电机反馈（20ms周期）
         if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_states_time).count() >= 10) 
         {
-            ros->robotFbValuePub(robotDriver->mecarm,robotDriver->lifter_l_pos,robotDriver->lifter_r_pos,robotDriver->jaw_pos);
+            ros->robotFbValuePub(robotDriver->mecarm,robotDriver->getLifterLeftPos(),robotDriver->getLifterRightPos(),robotDriver->getJawPos());
             last_states_time=now;
         }
         // 任务1：电机控制（10ms周期）
         if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_control_time).count() >= 10) 
-        {
+        { 
             bool jaw_changed=ros->get_jaw_cmd(jaw_cmd); 
+
             if(ros->getJointMotorCommand(CommandValues)) 
             {
-                robotDriver->CommandFrameProcess(CommandValues);
+                robotDriver->commandFrameProcess(CommandValues);
             }            
             if(jaw_changed)
            {
-                 robotDriver->JawCommandProcess(jaw_cmd);
+                 robotDriver->jawCommandProcess(jaw_cmd);
             }  
             last_control_time = now;  // 更新时间戳
         }
@@ -133,26 +131,32 @@ bool Robot::run(void)
 
             if(left_magnet_changed||right_magnet_changed)
            {
-                robotDriver->CommandServeMagnetProcess(left_magnet_state, right_magnet_state);
+                robotDriver->commandServeMagnetProcess(left_magnet_state, right_magnet_state);
             }
             if(green_changed||yellow_changed)
             {
 
-                robotDriver->CommandServeLedProcess(rad_led, yellow_led);
+                robotDriver->commandServeLedProcess(rad_led, yellow_led);
             }
             if(catcher_gear_changed||catcher_state_changed)
             {
 
-                robotDriver->CommandServeCatcherProcess(catcher_gear, catcher_state);
+                robotDriver->commandServeCatcherProcess(catcher_gear, catcher_state);
             }
             if(mop_motor_pwm_changed||mop_state_changed)
             {
 
-                robotDriver->CommandServeMopProcess(mop_motor_pwm, mop_state);
+                robotDriver->commandServeMopProcess(mop_motor_pwm, mop_state);
             }
             last_tools_time = now;  // 更新时间戳
         }
- 
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_settime_time).count() >= 5000) 
+        {
+            rclcpp::Time current_time = ros->now();
+            uint64_t total_nanoseconds = current_time.nanoseconds();
+            robotDriver->commandSetTimeProcess(total_nanoseconds);
+            last_settime_time = now;  // 更新时间戳
+        }
         ros->rosSleep();
         return true; 
     }else

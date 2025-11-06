@@ -31,7 +31,6 @@ namespace bimax_driver_ns{
     class AmbotDriverCLASS
     {
     public:
-
         bool threadStop;
         std::vector<std::string> robotType;
         YiyouMecArm mecarm = {
@@ -50,38 +49,53 @@ namespace bimax_driver_ns{
             .pos_rad_motor5 = 0.0f, .vel_rad_s_motor5 = 0.0f, .torque_nm_motor5 = 0.0f,
             .status_motor5 = 0xFF, .error_motor5 = 0
         };
-        float lifter_l_pos;
-        float  lifter_r_pos;
-        float jaw_pos;
         AmbotDriverCLASS(const std::shared_ptr<RosClass>& ros);
         ~AmbotDriverCLASS();
         /* open function */
-        bool initial(void);
-        bool JawCommandProcess(float pos);
-        bool CommandFrameProcess(bimax_msgs::msg::RobotCommand& cmd);
-        bool CommandServeLedProcess(uint8_t green,uint8_t yellow);
-        bool CommandServeMagnetProcess(uint8_t green,uint8_t yellow);
-        bool CommandServeCatcherProcess(uint8_t green,uint8_t yellow);
-        bool CommandServeMopProcess(uint16_t mop_motor_pwm,uint8_t mop_state);
+        void  setLifterLeftPos(float new_pos);  
+        void  setLifterRightPos(float pos);
+        void  setJawPosition(float pos) {jawPos.store(pos, std::memory_order_release);} 
+        bool  initial(void);
+        bool  jawCommandProcess(float pos);
+        bool  commandFrameProcess(bimax_msgs::msg::RobotCommand& cmd);
+        bool  commandServeLedProcess(uint8_t green,uint8_t yellow);
+        bool  commandServeMagnetProcess(uint8_t green,uint8_t yellow);
+        bool  commandServeCatcherProcess(uint8_t green,uint8_t yellow);
+        bool  commandServeMopProcess(uint16_t mop_motor_pwm,uint8_t mop_state);
+        bool  commandSetTimeProcess(uint64_t time);
+        float getJawPos() const { return jawPos.load(std::memory_order_acquire); }
+        float getLifterLeftPos() const {return lifterLiftPos.load(std::memory_order_acquire);}         
+        float getLifterRightPos() const {  return lifterRightPos.load(std::memory_order_acquire);}     
+
     private:
+        int motorFd, sensorFd;    
         std::shared_ptr<bimax_driver_ns::RosClass> ros;
-        void  floatToUint32(float input, uint8_t* des);
-        PrivateProtocolCLASS *protocol;         //communication protocol instance
-        void printByteStream(const uint8_t* data, ssize_t count);
-        int motorFd, sensorFd;                  //low driver motor file ID and sensor ID
+        std::atomic<float>lifterLiftPos{0.0f};
+        std::atomic<float>lifterRightPos{0.0f};
+        std::atomic<float> jawPos{0.0f};
         pthread_t motorTid, sensorTid;          //motor read feedback thread ID and sensor read thread ID
-        size_t processBuffer(const uint8_t* data, size_t length) ;
-        bool LifterMotorprocess(bimax_msgs::msg::RobotCommand& cmd);
-        ssize_t txPacket(protocolOutputBuffer_TP &out);
-        bool setMotorLocomotionCommand(CommFrame* frame) ;       
+        PrivateProtocolCLASS *protocol;         //communication protocol instance
+        
+        void floatToUint32(float input, uint8_t* des);
+        void printByteStream(const uint8_t* data, ssize_t count);
         void getAllMotorStateFromMCU(void);
-        static void* newReadMotorThread(void* arg);
         void createReceiveThread(void);
-        static void* newProccessMotorThread(void* arg);
-        ssize_t printReceivedDataWithFrequency(int motorFd) ;
-        void ProccessAllMotorStateFromMCU(void);
-        bool YiyouMotorprocess(bimax_msgs::msg::RobotCommand& cmd);
+        void proccessAllMotorStateFromMCU(void);
         void checkToMotorStates(YiyouMecArm &mecarm);
+        bool setMotorLocomotionCommand(CommFrame* frame) ;  
+        bool lifterMotorProcess(bimax_msgs::msg::RobotCommand& cmd);
+        bool yiyouMotorProcess(bimax_msgs::msg::RobotCommand& cmd);
+        static void* newReadMotorThread(void* arg);
+        static void* newProccessMotorThread(void* arg);
+        size_t processBuffer(const uint8_t* data, size_t length) ;
+        ssize_t txPacket(protocolOutputBuffer_TP &out);
+        ssize_t printReceivedDataWithFrequency(int motorFd) ;     
+
+
+
+
+
+
 
     };
     

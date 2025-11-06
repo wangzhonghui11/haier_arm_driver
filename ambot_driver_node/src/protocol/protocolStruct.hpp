@@ -206,8 +206,8 @@ namespace bimax_driver_ns
         struct LiftsSet {
             union {
                 struct {
-                    uint32_t left_pos;
-                    uint32_t right_pos;  // 预留
+                    float left_pos;
+                    float right_pos;  // 预留
                 } real;
                 uint8_t data[8];
             };

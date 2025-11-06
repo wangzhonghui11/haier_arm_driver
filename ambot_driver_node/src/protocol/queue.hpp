@@ -9,9 +9,9 @@ using namespace std::chrono_literals;
 namespace bimax_driver_ns {
 
 enum class DeviceType {
-    MEC_ARM    = ID_MEC_ARM_UPLOAD,
-    LIFTS      = ID_LIFTS_UPLOAD,
-    JAW_MOTOR  = ID_JAW_MOTOR_UPLOAD
+    MEC_ARM     = ID_MEC_ARM_UPLOAD,
+    LIFTS_MOTOR = ID_LIFTS_UPLOAD,
+    JAW_MOTOR   = ID_JAW_MOTOR_UPLOAD
 };
 
 class UnifiedDeviceQueue {

@@ -12,66 +12,60 @@ namespace bimax_driver_ns{
 
     AmbotDriverCLASS::AmbotDriverCLASS(const std::shared_ptr<RosClass>& ros) : ros(ros)
     {
+        struct termios serialPortSettings;
+        struct serial_struct serInfo;
+
         protocol = new PrivateProtocolCLASS(ros);
-        robotType.push_back("ambot_N1");
-        robotType.push_back("ambot_W1");
-        robotType.push_back("ambot_P1");
-        // 1.open device file
         motorFd = open("/dev/ttyUSB0", O_RDWR | O_NOCTTY );
         if (motorFd == -1) {
             RCLCPP_ERROR(ros->get_logger(), "Failed to open motor serial port");
             // exit(0);
         }
-        // 2.init serial config file
-        struct termios SerialPortSettings;
-        struct serial_struct ser_info;
-        // 3.1 get serial current feature and save to SerialPortSettings
-        tcgetattr(motorFd, &SerialPortSettings);
-        // 3.2 according baud to set the serial baudrate
+        tcgetattr(motorFd, &serialPortSettings);
         if (ros->motor_baud == 115200)
         {
             RCLCPP_INFO(ros->get_logger(), "set baud: 115200 successfully!");
-            cfsetispeed(&SerialPortSettings, B115200);
-            cfsetospeed(&SerialPortSettings, B115200);
+            cfsetispeed(&serialPortSettings, B115200);
+            cfsetospeed(&serialPortSettings, B115200);
         }else if (ros->motor_baud == 921600)
         {
             RCLCPP_INFO(ros->get_logger(), "set baud: 921600 successfully!");
-            cfsetispeed(&SerialPortSettings, B921600);
-            cfsetospeed(&SerialPortSettings, B921600);
+            cfsetispeed(&serialPortSettings, B921600);
+            cfsetospeed(&serialPortSettings, B921600);
         }else if (ros->motor_baud== 1000000)
         {
             RCLCPP_INFO(ros->get_logger(), "set baud: 1000000 successfully!");
-            cfsetispeed(&SerialPortSettings, B1000000);
-            cfsetospeed(&SerialPortSettings, B1000000);
+            cfsetispeed(&serialPortSettings, B1000000);
+            cfsetospeed(&serialPortSettings, B1000000);
         }
         else{
             RCLCPP_INFO(ros->get_logger(), "set defalut baud: 1000000 successfully!");
-            cfsetispeed(&SerialPortSettings, B1000000);
-            cfsetospeed(&SerialPortSettings, B1000000);
+            cfsetispeed(&serialPortSettings, B1000000);
+            cfsetospeed(&serialPortSettings, B1000000);
         }
         // 3.3 set uart communicate features
-        SerialPortSettings.c_cflag &= ~PARENB;      // Disable parity
-        SerialPortSettings.c_cflag &= ~CSTOPB;      // 1 stop bit
-        SerialPortSettings.c_cflag |= CS8;          // 8 bits per byte
-        SerialPortSettings.c_cflag &= ~CRTSCTS;     // Disable RTS/CTS hardware flow control
-        SerialPortSettings.c_cflag |= CREAD | CLOCAL; // Turn on READ & ignore ctrl lines (CLOCAL = SerialPortSettings
-        SerialPortSettings.c_lflag &= ~ICANON;      // Disable canonical mode
-        SerialPortSettings.c_lflag &= ~ECHO;        // Disable echo
-        SerialPortSettings.c_lflag &= ~ECHOE;       // Disable erasure
-        SerialPortSettings.c_lflag &= ~ECHONL;      // Disable new-line echo
-        SerialPortSettings.c_lflag &= ~ISIG;        // Disable interpretation of INTR, QUIT and SUSP
-        SerialPortSettings.c_iflag &= ~(IXON | IXOFF | IXANY); // Turn off s/w flow ctrl
-        SerialPortSettings.c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL); // Disable any special handling of received bytes
-        SerialPortSettings.c_oflag &= ~OPOST;       // Prevent special interpretation of output bytes (e.g. newline chars)
-        SerialPortSettings.c_oflag &= ~ONLCR;       // Prevent conversion of newline to carriage return/line feed
-        SerialPortSettings.c_cc[VTIME] = 0;         // timeout set, unit 1/10s, if set zero, will return right now 
-        SerialPortSettings.c_cc[VMIN] = 0;        // wait for enough data to read, if set zero, data will read right now
+        serialPortSettings.c_cflag &= ~PARENB;      // Disable parity
+        serialPortSettings.c_cflag &= ~CSTOPB;      // 1 stop bit
+        serialPortSettings.c_cflag |= CS8;          // 8 bits per byte
+        serialPortSettings.c_cflag &= ~CRTSCTS;     // Disable RTS/CTS hardware flow control
+        serialPortSettings.c_cflag |= CREAD | CLOCAL; // Turn on READ & ignore ctrl lines (CLOCAL = serialPortSettings
+        serialPortSettings.c_lflag &= ~ICANON;      // Disable canonical mode
+        serialPortSettings.c_lflag &= ~ECHO;        // Disable echo
+        serialPortSettings.c_lflag &= ~ECHOE;       // Disable erasure
+        serialPortSettings.c_lflag &= ~ECHONL;      // Disable new-line echo
+        serialPortSettings.c_lflag &= ~ISIG;        // Disable interpretation of INTR, QUIT and SUSP
+        serialPortSettings.c_iflag &= ~(IXON | IXOFF | IXANY); // Turn off s/w flow ctrl
+        serialPortSettings.c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL); // Disable any special handling of received bytes
+        serialPortSettings.c_oflag &= ~OPOST;       // Prevent special interpretation of output bytes (e.g. newline chars)
+        serialPortSettings.c_oflag &= ~ONLCR;       // Prevent conversion of newline to carriage return/line feed
+        serialPortSettings.c_cc[VTIME] = 0;         // timeout set, unit 1/10s, if set zero, will return right now 
+        serialPortSettings.c_cc[VMIN] = 0;        // wait for enough data to read, if set zero, data will read right now
         // 3.4 Enable linux FTDI low latency mode
-        ioctl(motorFd, TIOCGSERIAL, &ser_info);
-        ser_info.flags |= ASYNC_LOW_LATENCY;
-        ioctl(motorFd, TIOCSSERIAL, &ser_info);
+        ioctl(motorFd, TIOCGSERIAL, &serInfo);
+        serInfo.flags |= ASYNC_LOW_LATENCY;
+        ioctl(motorFd, TIOCSSERIAL, &serInfo);
         // 3.5 Set the new attributes to the termios structure
-        if((tcsetattr(motorFd, TCSANOW, &SerialPortSettings)) != 0) 
+        if((tcsetattr(motorFd, TCSANOW, &serialPortSettings)) != 0) 
         {
             RCLCPP_ERROR(ros->get_logger(), "Failed to set serial port attributes! for port: %s", ros->robotFeatures.motorDevName.c_str());
             sleep(1);
@@ -89,9 +83,6 @@ namespace bimax_driver_ns{
     {
         return  write(motorFd, out.buffer, out.length);
     }
-
-
-
 
     /**  
     *   @brief      initial function for MCU class
@@ -117,40 +108,7 @@ namespace bimax_driver_ns{
 
     // 全局变量用于计算频率
     static auto lastTime = std::chrono::steady_clock::now();
-    static size_t totalBytes = 0;
-    static double frequency = 0.0;
-    ssize_t AmbotDriverCLASS::printReceivedDataWithFrequency(int motorFd) {
-        uint8_t read_buffer[LEN_MAX];
-        ssize_t currentReadCount = read(motorFd, read_buffer, LEN_MAX);
-        
-        if (currentReadCount > 0) {
-            // 更新总字节数
-            totalBytes += currentReadCount;
-            
-            // 计算时间差
-            auto now = std::chrono::steady_clock::now();
-            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastTime).count() / 1000.0;
-            
-            // 计算频率（每秒字节数）
-            if (elapsed > 0.1) {  // 至少0.1秒才更新频率，避免抖动
-                frequency = totalBytes / elapsed;
-                lastTime = now;
-                totalBytes = 0;
-            }
-            
-            // 打印接收到的数据
-            std::cout << "Read " << currentReadCount << " bytes (";
-            std::cout << std::fixed << std::setprecision(2) << frequency << " bytes/s):\n";
-            
-            // 打印十六进制数据
-            for (ssize_t i = 0; i < currentReadCount; ++i) {
-                std::cout << std::hex << std::setw(2) << std::setfill('0') 
-                        << static_cast<int>(read_buffer[i]) << " ";
-            }
-            std::cout << std::dec << "\n\n";
-            return currentReadCount;
-        }
-    }
+
 
     void AmbotDriverCLASS::printByteStream(const uint8_t* data, ssize_t count) {
             // 调试控制参数
@@ -255,7 +213,6 @@ namespace bimax_driver_ns{
             }
         }
          // std::this_thread::sleep_for(std::chrono::milliseconds(20));  // 20ms
-        //    iurrentReadCount=printReceivedDataWithFrequency(motorFd);
             // currentReadCount = read(motorFd, read_buffer,LEN_MAX);
             // if (currentReadCount > 0) {
             // //     // 调试模式才打印原始数据
@@ -271,20 +228,22 @@ namespace bimax_driver_ns{
         
     }
 
-    void AmbotDriverCLASS::ProccessAllMotorStateFromMCU(void){
+    void AmbotDriverCLASS::proccessAllMotorStateFromMCU(void){
         static auto last_states_time = std::chrono::steady_clock::now();
         for(;;)
        {
-
-           //50hz
-
            if (threadStop)
             {
-                RCLCPP_INFO(ros->get_logger(), "ProccessAllMotorStateFromMCU thread exit");
+                RCLCPP_INFO(ros->get_logger(), "proccessAllMotorStateFromMCU thread exit");
                 pthread_exit(NULL);
             }
-            protocol->updateDataConsumer(mecarm,lifter_l_pos,lifter_r_pos,jaw_pos);
-
+            float lifter_right_value = getLifterRightPos();
+            float lifter_left_value = getLifterLeftPos();
+            float jaw_value = getJawPos();
+            protocol->updateDataConsumer(mecarm,lifter_left_value,lifter_right_value,jaw_value);
+            setLifterRightPos(lifter_right_value);
+            setLifterLeftPos(lifter_left_value);
+            setJawPosition(jaw_value);
             auto now = std::chrono::steady_clock::now();
             if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_states_time).count() >= 1000) 
             {
@@ -329,16 +288,6 @@ namespace bimax_driver_ns{
         }
 
     }
-    void AmbotDriverCLASS::floatToUint32(float input, uint8_t* des) {
-        uint32_t bits;
-        memcpy(&bits, &input, sizeof(float));
-
-        // 小端序存储（低字节在前）
-        des[0] = bits & 0xFF;          // 最低字节
-        des[1] = (bits >> 8) & 0xFF;
-        des[2] = (bits >> 16) & 0xFF;
-        des[3] = (bits >> 24) & 0xFF;  // 最高字节
-    }
     void* AmbotDriverCLASS::newReadMotorThread(void* arg)
     {
         AmbotDriverCLASS* ptr = (AmbotDriverCLASS*) arg;
@@ -348,7 +297,7 @@ namespace bimax_driver_ns{
     void* AmbotDriverCLASS::newProccessMotorThread(void* arg)
     {
         AmbotDriverCLASS* ptr = (AmbotDriverCLASS*) arg;
-        ptr->ProccessAllMotorStateFromMCU();
+        ptr->proccessAllMotorStateFromMCU();
         pthread_exit(0);
     }
     void AmbotDriverCLASS::createReceiveThread(void)
@@ -358,175 +307,25 @@ namespace bimax_driver_ns{
         if(pthread_create(&sensorTid, NULL, newProccessMotorThread, (void *)this) != 0)
             perror("Create read mcu data thread fail!\n");
     }
-    bool AmbotDriverCLASS::LifterMotorprocess(bimax_msgs::msg::RobotCommand& cmd)
-    {
-        uint8_t des_left[4];
-        uint8_t des_right[4];
-        floatToUint32(cmd.motor_command[0].q, des_left);  // 填充 des_left
-        floatToUint32(cmd.motor_command[4].q, des_right); // 填充 des_right
-        uint8_t databuf[8];
-        memcpy(databuf, des_left, 4);      // 前 4 字节 = des_left
-        memcpy(databuf + 4, des_right, 4); // 后 4 字节 = des_right
-        // std::cout << "databuf: ";
-        // for (int i = 0; i < 8; i++) {
-        //     std::cout << "0x" << std::hex << std::setw(2) << std::setfill('0') 
-        //             << static_cast<int>(databuf[i]) << " ";
-        // }
-        // std::cout << std::endl;
-        cmdframLiftsSet.databuf=databuf;
-        return setMotorLocomotionCommand(cmdframGroup[STORE_NUM_LIFTS_SET]);
-
-    }
-    bool AmbotDriverCLASS::YiyouMotorprocess(bimax_msgs::msg::RobotCommand& cmd) {
-    if(cmd.motor_command[1].mode==0||cmd.motor_command[1].mode==1){    
-        uint8_t databuf[28] = {0};  // 初始化全0
-        // 1. 保留前3字节（reserver1 + reserver2）
-        databuf[0] = 0;  // reserver1的低字节
-        databuf[1] = 0;  // reserver1的高字节
-        databuf[2] = 0;  // reserver2
-        RCLCPP_INFO(ros->get_logger(), "cmd.motor_command[1].q = %f ", cmd.motor_command[1].q);
-        RCLCPP_INFO(ros->get_logger(), "cmd.motor_command[2].q = %f ", cmd.motor_command[2].q);   
-        // 2. 存储 Motor_Control_Mode（第4字节）
-        // 2. 存储 Motor_Control_Mode（第4字节）
-        databuf[3] = static_cast<uint8_t>(cmd.motor_command[1].mode);
-
-        // 3. 填充电机位置数据（从第5字节开始）
-        if (databuf[3] == 0 || databuf[3] == 1) {  // 检查模式有效性
-            const int offsets[] = {4, 8, 12, 16, 20, 24};  // 对应 position_motor1~6 的偏移量
-            const int indices[] = {1, 2, 3, 5, 6, 7};      // motor_command 的索引
-
-            for (int i = 0; i < 6; i++) {
-                // 安全转换浮点数到字节流（小端）
-                union {
-                    float f;
-                    uint8_t b[4];
-                } converter;
-                converter.f = cmd.motor_command[indices[i]].q;
-                memcpy(databuf + offsets[i], converter.b, 4);
-            }
-        }
-        // 5. 提交命令
-        memcpy(cmdframMecArmSet.databuf, databuf, sizeof(databuf));
-        return setMotorLocomotionCommand(cmdframGroup[STORE_NUM_MECARM_SET]);
-    }
-    else if(cmd.motor_command[1].mode == 3) {
-        // 处理模式3（完整控制模式）
-        MecArmMitSet command = {0};
-        
-        // 填充保留字段
-        command.real.reserver1 = 0;
-        command.real.reserver2 = 0;
-        
-        // 设置控制模式
-        command.real.Motor_Control_Mode = static_cast<uint8_t>(cmd.motor_command[1].mode);
-        
-        // 填充电机1数据
-        command.real.cmd_pos1 = cmd.motor_command[1].q;
-        command.real.cmd_vel1 = cmd.motor_command[1].dq;    // 假设qd是速度
-        command.real.cmd_torque1 = cmd.motor_command[1].tau; // 假设tau是扭矩
-        command.real.kp1 = cmd.motor_command[1].kp;         // 假设kp是比例增益
-        command.real.kd1 = cmd.motor_command[1].kd;         // 假设kd是微分增益
-        
-        // 填充电机2数据
-        command.real.cmd_pos2 = cmd.motor_command[2].q;
-        command.real.cmd_vel2 = cmd.motor_command[2].dq;
-        command.real.cmd_torque2 = cmd.motor_command[2].tau;
-        command.real.kp2 = cmd.motor_command[2].kp;
-        command.real.kd2 = cmd.motor_command[2].kd;
-        
-        // 提交命令 - 注意这里需要确保cmdframMecArmSet.databuf足够大(至少44字节)
-        memcpy(cmdArmMitSet.databuf, command.data, sizeof(command.data));
-        return setMotorLocomotionCommand(cmdframGroup[STROE_NUM_ARM_MIT_SET]);
-    }   
-    }
-    bool AmbotDriverCLASS::JawCommandProcess(float pos)
-    {
-        uint8_t jaw_pos[4];
-        floatToUint32(pos, jaw_pos);  // 填充 des_left
-        cmdframJawSet.databuf=jaw_pos;
-        return setMotorLocomotionCommand(cmdframGroup[STORE_NUM_JAW_SET]);
-    }
-    bool AmbotDriverCLASS::CommandFrameProcess(bimax_msgs::msg::RobotCommand& cmd)
+    bool AmbotDriverCLASS::commandFrameProcess(bimax_msgs::msg::RobotCommand& cmd)
     {
         static int lifter_counter = 0;
         static int lifter_threshold = 2;  // Lifter累计2次执行
-        
-        // LifterMotorprocess：累计2次执行一次
         lifter_counter++;
         if (lifter_counter >= lifter_threshold) {
-            LifterMotorprocess(cmd);
+            lifterMotorProcess(cmd);
             lifter_counter = 0;  // 重置计数器
-        }
-        
-        // YiyouMotorprocess：每次调用都执行
-        YiyouMotorprocess(cmd);
-        
+        }     
+        yiyouMotorProcess(cmd);      
         return true;        
-
-    }
-    bool AmbotDriverCLASS::CommandServeLedProcess(uint8_t green,uint8_t yellow)
-    {
-        uint8_t led[2]={green,yellow};
-        cmdframLedSet.databuf=led;
-        setMotorLocomotionCommand(cmdframGroup[STROE_NUM_LED_SET]);
-        return true;
-    }
-    bool AmbotDriverCLASS::CommandServeCatcherProcess(uint8_t catcher_gear,uint8_t catcher_state)
-    {
-        uint8_t catcher[4]={0x00,0x00,catcher_gear,catcher_state};
-        cmdframCatcherSet.databuf=catcher;
-        setMotorLocomotionCommand(cmdframGroup[STORE_NUM_CATCHER_SET]);
-        return true;
-    }
-    bool AmbotDriverCLASS::CommandServeMopProcess(uint16_t mop_motor_pwm,uint8_t mop_state)
-    {
-        uint8_t catcher[3]={mop_motor_pwm & 0xFF,(mop_motor_pwm >> 8) & 0xFF,mop_state};
-        cmdframMopSet.databuf=catcher;
-        setMotorLocomotionCommand(cmdframGroup[STORE_NUM_MOP_SET]);
-        return true;
-    }
-    bool AmbotDriverCLASS::CommandServeMagnetProcess(uint8_t left_magnet_state,uint8_t right_magnet_state)
-    {
-        uint8_t magnet[2]={left_magnet_state,right_magnet_state};
-        cmdframMagnetet.databuf=magnet;
-        setMotorLocomotionCommand(cmdframGroup[STORE_NUM_MAGNET_SET]);
-        return true;
     }
 
     bool AmbotDriverCLASS::setMotorLocomotionCommand(CommFrame* frame)
     {
         protocolOutputBuffer_TP sendBuff;
-        uint8_t cmdId=frame->cmd_ID;
-        switch(cmdId)
-        {
-            case ID_CMD_TIME_SET://设置MCU时间
-                sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STORE_NUM_TIME_SET],sendBuff.buffer);	
-                break;
-            case ID_CMD_MOP_SET://拖布电机控制
-                sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STORE_NUM_MOP_SET],sendBuff.buffer);
-                break;
-            case ID_CMD_JAW_SET://夹爪电机控制
-                sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STORE_NUM_JAW_SET],sendBuff.buffer);	
-                break;
-            case ID_CMD_CATCHER_SET://吸尘电机控制
-                sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STORE_NUM_CATCHER_SET],sendBuff.buffer);
-                break;					 
-            case ID_CMD_MAGNET_SET: //磁铁控制
-                sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STORE_NUM_MAGNET_SET],sendBuff.buffer);			
-                break;
-            case ID_CMD_MECARM_SET://机械臂控制	
-                sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STORE_NUM_MECARM_SET],sendBuff.buffer);	
-                break;		      
-            case ID_CMD_LIFTS_SET://升降电机控制
-                sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STORE_NUM_LIFTS_SET],sendBuff.buffer);	
-                break;		
-            case ID_CMD_LED_SET: //LED灯控制
-                 sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STROE_NUM_LED_SET],sendBuff.buffer);	
-                break;		 
-            case ID_CMD_MECARM_MIT_SET:
-                 sendBuff.length=protocol->comm_frame_upload(cmdframGroup[STROE_NUM_ARM_MIT_SET],sendBuff.buffer);	   
-                break;        		
-            }
+
+        sendBuff.length=protocol->commFrameUpload(frame,sendBuff.buffer);	
+
         if(sendBuff.length != txPacket(sendBuff)){
             RCLCPP_ERROR(ros->get_logger(), "SetMotorLocomotionCommand failed to send");
             return false;
@@ -536,6 +335,205 @@ namespace bimax_driver_ns{
         }
         // don't wait for set command response now 
         return true;
+    }
+    bool AmbotDriverCLASS::lifterMotorProcess(bimax_msgs::msg::RobotCommand& cmd)
+    {
+        LiftsSet dataLiftsSet = {0};
+        dataLiftsSet.real.left_pos=cmd.motor_command[0].q;
+        dataLiftsSet.real.right_pos=cmd.motor_command[4].q;       
+        CommFrame cmdframLiftsSet = {
+            .head_H =FRAME_HEAD_H ,
+            .head_L = FRAME_HEAD_L,
+            .frame_ID_H = 0,
+            .frame_ID_L = 0,
+            .length = 1 + DATA_LEGTH_LIFTS_SET,
+            .cmd_ID =  ID_CMD_LIFTS_SET,
+            .databuf = dataLiftsSet.data,
+            .CRC_H = 0,
+            .CRC_L = 0
+        };
+        return setMotorLocomotionCommand(&cmdframLiftsSet);
+    }
+    bool AmbotDriverCLASS::yiyouMotorProcess(bimax_msgs::msg::RobotCommand& cmd) 
+    {
+        if(cmd.motor_command[1].mode==0||cmd.motor_command[1].mode==1){
+            MecArmSet dataMecArmSet = {0};
+            dataMecArmSet.real.Motor_Control_Mode=static_cast<uint8_t>(cmd.motor_command[1].mode);
+            dataMecArmSet.real.position_motor1=cmd.motor_command[1].q;
+            dataMecArmSet.real.position_motor2=cmd.motor_command[2].q;
+            dataMecArmSet.real.position_motor3=cmd.motor_command[3].q;
+            dataMecArmSet.real.position_motor4=cmd.motor_command[5].q;
+            dataMecArmSet.real.position_motor5=cmd.motor_command[6].q; 
+            dataMecArmSet.real.position_motor6=cmd.motor_command[7].q;                       
+            CommFrame cmdframMecArmSet = {
+                .head_H =FRAME_HEAD_H ,
+                .head_L = FRAME_HEAD_L,
+                .frame_ID_H = 0,
+                .frame_ID_L = 0,
+                .length = 1 + DATA_LEGTH_MECARM_SET,
+                .cmd_ID =  ID_CMD_MECARM_SET,
+                .databuf = dataMecArmSet.data,
+                .CRC_H = 0,
+                .CRC_L = 0
+            };            
+            RCLCPP_INFO(ros->get_logger(), "cmd.motor_command[1].q = %f ", cmd.motor_command[1].q);
+            RCLCPP_INFO(ros->get_logger(), "cmd.motor_command[2].q = %f ", cmd.motor_command[5].q);   
+            return setMotorLocomotionCommand(&cmdframMecArmSet);
+        }
+        else if(cmd.motor_command[1].mode == 3) {
+            // 处理模式3（完整控制模式）
+            MecArmMitSet command = {0};
+            
+            // 填充保留字段
+            command.real.reserver1 = 0;
+            command.real.reserver2 = 0;
+            
+            // 设置控制模式
+            command.real.Motor_Control_Mode = static_cast<uint8_t>(cmd.motor_command[1].mode);
+            
+            // 填充电机1数据
+            command.real.cmd_pos1 = cmd.motor_command[1].q;
+            command.real.cmd_vel1 = cmd.motor_command[1].dq;    // 假设qd是速度
+            command.real.cmd_torque1 = cmd.motor_command[1].tau; // 假设tau是扭矩
+            command.real.kp1 = cmd.motor_command[1].kp;         // 假设kp是比例增益
+            command.real.kd1 = cmd.motor_command[1].kd;         // 假设kd是微分增益
+            
+            // 填充电机2数据
+            command.real.cmd_pos2 = cmd.motor_command[2].q;
+            command.real.cmd_vel2 = cmd.motor_command[2].dq;
+            command.real.cmd_torque2 = cmd.motor_command[2].tau;
+            command.real.kp2 = cmd.motor_command[2].kp;
+            command.real.kd2 = cmd.motor_command[2].kd;
+            CommFrame cmdArmMitSet = {
+                .head_H =FRAME_HEAD_H ,
+                .head_L = FRAME_HEAD_L,
+                .frame_ID_H = 0,
+                .frame_ID_L = 0,
+                .length = 1 + DATA_LEGTH_MECARM_MIT_SET,
+                .cmd_ID =  ID_CMD_MECARM_MIT_SET,
+                .databuf = command.data,
+                .CRC_H = 0,
+                .CRC_L = 0
+            };        
+            return setMotorLocomotionCommand(&cmdArmMitSet);
+        }   
+    }
+    bool AmbotDriverCLASS::jawCommandProcess(float pos)
+    {
+        JawSet dataJawSet = {0};
+        dataJawSet.real.jaw_motor_angle=pos;
+        CommFrame cmdframJawSet = {
+            .head_H =FRAME_HEAD_H ,
+            .head_L = FRAME_HEAD_L,
+            .frame_ID_H = 0,
+            .frame_ID_L = 0,
+            .length = 1 + DATA_LEGTH_JAW_SET,
+            .cmd_ID =  ID_CMD_JAW_SET,
+            .databuf = dataJawSet.data,
+            .CRC_H = 0,
+            .CRC_L = 0
+        };
+        return setMotorLocomotionCommand(&cmdframJawSet);
+    }
+   bool AmbotDriverCLASS::commandSetTimeProcess(uint64_t time)
+    {
+        TimeSet command = {0};
+        command.real.time=time;
+        CommFrame TimeSet = {
+            .head_H =FRAME_HEAD_H ,
+            .head_L = FRAME_HEAD_L,
+            .frame_ID_H = 0,
+            .frame_ID_L = 0,
+            .length = 1 + DATA_LEGTH_TIME_SET,
+            .cmd_ID =  ID_CMD_TIME_SET,
+            .databuf = command.data,
+            .CRC_H = 0,
+            .CRC_L = 0
+        };
+        setMotorLocomotionCommand(&TimeSet);
+        return true;
+    }
+    bool AmbotDriverCLASS::commandServeLedProcess(uint8_t green,uint8_t yellow)
+    {
+        LedSet dataLedSet = {0};
+        dataLedSet.real.led_green_state=green;
+        dataLedSet.real.led_yellow_state=yellow;   
+        CommFrame cmdframLedSet = {
+            .head_H =FRAME_HEAD_H ,
+            .head_L = FRAME_HEAD_L,
+            .frame_ID_H = 0,
+            .frame_ID_L = 0,
+            .length = 1 + DATA_LEGTH_LED_SET,
+            .cmd_ID =  ID_CMD_LED_SET,
+            .databuf = dataLedSet.data,
+            .CRC_H = 0,
+            .CRC_L = 0
+        };
+        setMotorLocomotionCommand(&cmdframLedSet);
+        return true;
+    }
+    bool AmbotDriverCLASS::commandServeCatcherProcess(uint8_t catcher_gear,uint8_t catcher_state)
+    {
+        CatcherSet dataCatcherSet = {0};
+        dataCatcherSet.real.catcher_gear=catcher_gear;
+        dataCatcherSet.real.catcher_state=catcher_state;      
+        CommFrame cmdframCatcherSet = {
+            .head_H =FRAME_HEAD_H ,
+            .head_L = FRAME_HEAD_L,
+            .frame_ID_H = 0,
+            .frame_ID_L = 0,
+            .length = 1 + DATA_LEGTH_CATCHER_SET,
+            .cmd_ID =  ID_CMD_CATCHER_SET,
+            .databuf = dataCatcherSet.data,
+            .CRC_H = 0,
+            .CRC_L = 0
+        };
+        setMotorLocomotionCommand(&cmdframCatcherSet);
+        return true;
+    }
+    bool AmbotDriverCLASS::commandServeMopProcess(uint16_t mop_motor_pwm,uint8_t mop_state)
+    {
+        MopSet dataMopSet = {0};
+        dataMopSet.real.mop_motor_pwm=mop_motor_pwm;
+        dataMopSet.real.mop_state=mop_state;       
+        CommFrame cmdframMopSet = {
+            .head_H =FRAME_HEAD_H ,
+            .head_L = FRAME_HEAD_L,
+            .frame_ID_H = 0,
+            .frame_ID_L = 0,
+            .length = 1 + DATA_LEGTH_MOP_SET,
+            .cmd_ID =  ID_CMD_MOP_SET,
+            .databuf = dataMopSet.data,
+            .CRC_H = 0,
+            .CRC_L = 0
+        };
+        setMotorLocomotionCommand(&cmdframMopSet);
+        return true;
+    }
+    bool AmbotDriverCLASS::commandServeMagnetProcess(uint8_t left_magnet_state,uint8_t right_magnet_state)
+    {
+        MagnetSet dataMagnetSet = {0};
+        dataMagnetSet.real.left_magnet_state=left_magnet_state;
+        dataMagnetSet.real.right_magnet_state=right_magnet_state;     
+        CommFrame cmdframMagnetet = {
+            .head_H =FRAME_HEAD_H ,
+            .head_L = FRAME_HEAD_L,
+            .frame_ID_H = 0,
+            .frame_ID_L = 0,
+            .length = 1 + DATA_LEGTH_MAGNET_SET,
+            .cmd_ID =  ID_CMD_MAGNET_SET,
+            .databuf = dataMagnetSet.data,
+            .CRC_H = 0,
+            .CRC_L = 0
+        };
+        setMotorLocomotionCommand(&cmdframMagnetet);
+        return true;
+    }
+    void AmbotDriverCLASS::setLifterLeftPos(float new_pos) {      
+        lifterLiftPos.store(new_pos, std::memory_order_release);
+    }
+    void AmbotDriverCLASS::setLifterRightPos(float new_pos) {     
+        lifterRightPos.store(new_pos, std::memory_order_release);
     }
 
 }

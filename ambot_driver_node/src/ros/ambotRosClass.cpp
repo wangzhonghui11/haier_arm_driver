@@ -294,7 +294,7 @@ namespace bimax_driver_ns
         return false;
     }
 
-    void RosClass::robotFbValuePub(YiyouMecArm &mecarm,float &lef ,float &righ,float & jaw_pos)
+    void RosClass::robotFbValuePub(YiyouMecArm &mecarm,const float lef ,const float righ,const float  jaw_pos)
     {
     auto state_msg = bimax_msgs::msg::RobotState();
     state_msg.motor_state.push_back(createMotorState(0, lef, 0, 0.0f, 0)); 
