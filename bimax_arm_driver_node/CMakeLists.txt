@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(ambot_driver_node)
+project(bimax_arm_driver_node)
 
 ##############################################################################
 # 查找依赖
@@ -38,19 +38,19 @@ include_directories(
   src/protocol
 )
 # 自动添加库和可执行文件
-ament_auto_add_library(ambot_lib STATIC
+ament_auto_add_library(bimax_arm_lib STATIC
   src/driver/ambotDriver.cpp
   src/driver/robot.cpp
   src/protocol/privateProtocol.cpp
   src/protocol/crcModbus.cpp
   src/ros/ambotRosClass.cpp
 )
-ament_auto_add_executable(ambot_node
+ament_auto_add_executable(bimax_arm_driver_node
   main.cpp
 )
 # 链接库
-target_link_libraries(ambot_node
-  ambot_lib
+target_link_libraries(bimax_arm_driver_node
+  bimax_arm_lib
 )
 
 ##############################################################################
@@ -60,7 +60,6 @@ target_link_libraries(ambot_node
 # 自动安装所有必要文件
 ament_auto_package(
   INSTALL_TO_SHARE
-
   launch
   config
   #USE_SCOPED_HEADER_INSTALL_DIR

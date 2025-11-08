@@ -16,7 +16,8 @@ namespace bimax_driver_ns{
         struct serial_struct serInfo;
 
         protocol = new PrivateProtocolCLASS(ros);
-        motorFd = open("/dev/ttyUSB0", O_RDWR | O_NOCTTY );
+        RCLCPP_INFO(ros->get_logger(), "Trying to open motor device: '%s'", ros->motor_device.c_str());
+        motorFd = open(ros->motor_device.c_str(), O_RDWR | O_NOCTTY );
         if (motorFd == -1) {
             RCLCPP_ERROR(ros->get_logger(), "Failed to open motor serial port");
             // exit(0);

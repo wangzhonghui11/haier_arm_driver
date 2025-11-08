@@ -74,7 +74,7 @@ namespace bimax_driver_ns
         this->declare_parameter("bimax_server.led_service_name", "led_control");
         this->declare_parameter("bimax_server.magnet_service_name", "magnet_control");
         this->declare_parameter<std::string>("bimax_type", "bimax_W1");
-        this->declare_parameter("bimax_devices.motor_device", "/dev/ttyDefault");
+        this->declare_parameter<std::string>("motor_device", "/dev/ttydefalut");
         this->declare_parameter("bimax_params.motor_baud", 1000000);
         this->get_parameter("bimax_type", parameter_string_);
         this->declare_parameter("bimax_topic.motor_command_topic", "/bimaxArmCommandValues");
@@ -82,10 +82,12 @@ namespace bimax_driver_ns
         this->declare_parameter("bimax_topic.motor_states_topic", "/bimaxArmStateValues");
         this->declare_parameter("bimax_topic.motor_error_topic", "/bimax_motor_error");
         // 2. 读取设备参数
-        if (!this->get_parameter("bimax_devices.motor_device", motor_device)) {
+        // std::string motor_device;
+        if (!this->get_parameter("motor_device", motor_device)) {
             RCLCPP_ERROR(this->get_logger(), "Missing 'bimax_devices.motor_device' in YAML!");
             return false;
         }
+        // RCLCPP_INFO(this->get_logger(), "Missing 'bimax_devices.motor_device' in YAML! %s",motor_device.c_str());
         this->get_parameter("bimax_params.motor_baud", motor_baud);
 
         //2. 主题发布订阅

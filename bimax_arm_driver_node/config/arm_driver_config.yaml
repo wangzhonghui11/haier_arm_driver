@@ -1,11 +1,7 @@
-bimax_driver_node:
+/bimax_arm_driver_node:
   ros__parameters:
     bimax_type: "bimax_W1"
-    
-    bimax_devices:
-      motor_device: "/dev/ttyUSB0"
-      # sensor_device: "/dev/SENSOR_MCU"
-    
+    motor_device: "/dev/ttyMOTOR"
     bimax_params:  
       motor_baud: 1000000
       joint_motor_num: 12

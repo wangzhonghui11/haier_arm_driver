@@ -15,7 +15,7 @@ Robot::Robot(int argc, char** argv)
 {
 
     rclcpp::init(argc, argv);
-    ros = std::make_shared<bimax_driver_ns::RosClass>(argc, argv, "ambot_driver_node");
+    ros = std::make_shared<bimax_driver_ns::RosClass>(argc, argv, "bimax_arm_driver_node");
         
         // 直接使用多线程执行器 - 让ROS2自动管理线程
     executor_ = std::make_shared<rclcpp::executors::MultiThreadedExecutor>(
@@ -91,18 +91,22 @@ bool Robot::run(void)
     static auto last_control_time = std::chrono::steady_clock::now();
     static auto last_tools_time = std::chrono::steady_clock::now();
     static auto last_settime_time=std::chrono::steady_clock::now();
+    const auto  ControlPeriod = std::chrono::milliseconds(10);          // 50Hz = 20ms
      if(rclcpp::ok())
     {
 
         auto now = std::chrono::steady_clock::now();
         // 任务0：电机反馈（20ms周期）
-        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_states_time).count() >= 10) 
+        if ((now>=last_states_time))
         {
+     
             ros->robotFbValuePub(robotDriver->mecarm,robotDriver->getLifterLeftPos(),robotDriver->getLifterRightPos(),robotDriver->getJawPos());
-            last_states_time=now;
+            last_states_time+=ControlPeriod;
+            if (now - last_states_time >ControlPeriod)
+                last_states_time = now +ControlPeriod;   
         }
         // 任务1：电机控制（10ms周期）
-        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_control_time).count() >= 10) 
+        if (now>=last_control_time) 
         { 
             bool jaw_changed=ros->get_jaw_cmd(jaw_cmd); 
 
@@ -114,7 +118,9 @@ bool Robot::run(void)
            {
                  robotDriver->jawCommandProcess(jaw_cmd);
             }  
-            last_control_time = now;  // 更新时间戳
+            last_control_time+=ControlPeriod;
+            if (now - last_control_time >ControlPeriod)
+                last_control_time = now +ControlPeriod;   
         }
 
         // 任务2：LED控制（100ms周期） 
