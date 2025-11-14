@@ -1,7 +1,0 @@
-# 请求参数
-uint16 mop_motor_pwm      #拖布电机占空比：0 - 1000；
-uint8  mop_state         #拖布电机控制：1开 0关
----
-# 响应结果
-bool success       # 是否执行成功
-string message     # 详细信息

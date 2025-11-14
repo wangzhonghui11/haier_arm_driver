@@ -1,7 +1,0 @@
-# 请求参数
-uint8 green_state  # 绿灯状态：0=关, 1=开, 2=闪烁
-uint8 yellow_state # 黄灯状态：0=关, 1=开, 2=闪烁
----
-# 响应结果
-bool success       # 是否执行成功
-string message     # 详细信息

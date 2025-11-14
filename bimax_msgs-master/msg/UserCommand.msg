@@ -1,9 +1,0 @@
-int8 motion_mode 
-float32 vx_ee_l 
-float32 vy_ee_l 
-float32 vz_ee_l 
-float32 vx_ee_r
-float32 vy_ee_r 
-float32 vz_ee_r 
-float32 vx_base 
-float32 wz_base 
